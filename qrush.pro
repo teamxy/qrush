@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui
+QT += core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -12,10 +12,12 @@ TARGET = qrush
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    MainWindow.cpp
+    MainWindow.cpp \
+    GLWidget.cpp
 
 HEADERS  += \
-    MainWindow.h
+    MainWindow.h \
+    GLWidget.h
 
 FORMS    += \
     MainWindow.ui
