@@ -13,11 +13,13 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     MainWindow.cpp \
-    GLWidget.cpp
+    GLWidget.cpp \
+    Brush.cpp
 
 HEADERS  += \
     MainWindow.h \
-    GLWidget.h
+    GLWidget.h \
+    Brush.h
 
 FORMS    += \
     MainWindow.ui

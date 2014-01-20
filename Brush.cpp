@@ -2,20 +2,25 @@
 
 using namespace v8;
 
-static void Log(const char* event) {
-  printf("Logged: %s\n", event);
-}
+// needs to be static for now :/
+// TODO improve this
+QImage* image;
 
-static void LogCallback(const v8::FunctionCallbackInfo<Value>& args) {
-  if (args.Length() < 1) return;
+// Draw a simple point
+static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 2) return;
   HandleScope scope(args.GetIsolate());
-  Handle<Value> arg = args[0];
-  String::Utf8Value value(arg);
-  Log(*value);
+  Integer* x = Integer::Cast(*args[0]);
+  Integer* y = Integer::Cast(*args[1]);
+
+  QPainter painter(image);
+  painter.setPen(Qt::red);
+  painter.drawPoint(x->Value(), y->Value());
 }
 
-Brush::Brush(QImage image, std::string file) : image(image){
+// TODO: implement lots of more QPainter mappings
 
+void Brush::onDrag(int x, int y){
   // Get the default Isolate created at startup.
   Isolate* isolate = Isolate::GetCurrent();
 
@@ -25,8 +30,15 @@ Brush::Brush(QImage image, std::string file) : image(image){
   // define new global object
   Handle<ObjectTemplate> global = ObjectTemplate::New();
 
+  // define point draw fun
+  Local<FunctionTemplate> fun = FunctionTemplate::New(isolate, DrawPointCallback);
+
   // add log function
-  global->Set(String::NewFromUtf8(isolate, "log"), FunctionTemplate::New(isolate, LogCallback));
+  global->Set(String::NewFromUtf8(isolate, "drawPoint"), fun);
+
+  // set x and y
+  global->Set(String::NewFromUtf8(isolate, "x"), Number::New(isolate, x));
+  global->Set(String::NewFromUtf8(isolate, "y"), Number::New(isolate, y));
 
   // Create a new context.
   Handle<Context> context = Context::New(isolate, NULL, global);
@@ -42,8 +54,11 @@ Brush::Brush(QImage image, std::string file) : image(image){
 
   // Run the script to get the result.
   Handle<Value> result = script->Run();
+}
 
-  // Convert the result to an UTF8 string and print it.
-  String::Utf8Value utf8(result);
-  printf("%s\n", *utf8);
+Brush::Brush(QImage* _image, std::string file){
+  image = _image;
+
+  // TODO: get script from file
+  script = "drawPoint(x, y);";
 }
