@@ -2,6 +2,7 @@
 #define _QRUSH_BRUSH_H_
 
 #include <QImage>
+#include <v8.h>
 
 class Brush {
   public:
