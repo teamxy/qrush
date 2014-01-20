@@ -4,4 +4,4 @@
 
 message("Loading local build settings...")
 
-v8 = /Users/staher/Coding/v8
+v8 = /Users/johann/Development/Projects/v8

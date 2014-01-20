@@ -4,21 +4,25 @@
 #include <QGLWidget>
 
 class GLWidget : public QGLWidget {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
+  public:
     GLWidget(QWidget *parent);
 
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
 
-protected:
+  protected:
     void paintEvent(QPaintEvent *event);
+    void drawLineTo(const QPoint &endPoint);
+    void resizeEvent(QResizeEvent *event);
+    void resizeImage(QImage *image, const QSize &newSize);
 
-private:
+  private:
     bool isPressed;
-    QPainter painter;
+    QPoint lastPoint;
+    QImage image;
 
 };
 
