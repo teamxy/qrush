@@ -4,10 +4,12 @@
 #include <QMouseEvent>
 
 GLWidget::GLWidget(QWidget *parent)
-  : QGLWidget(QGLFormat(QGL::SampleBuffers), parent){
+  : QGLWidget(QGLFormat(QGL::SampleBuffers), parent) {
     // leave widget parts in the north-west and only repaint new stuff
     setAttribute(Qt::WA_StaticContents);
-  }
+
+    setCursor(QCursor(Qt::CrossCursor));
+}
 
 void GLWidget::paintEvent(QPaintEvent *event) {
   QPainter painter(this);
