@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "GLWidget.h"
 #include "ui_mainwindow.h"
+#include "Form.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -8,13 +9,15 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //Form* form = new Form();
+    //setCentralWidget(form);
+
     GLWidget *canvas = new GLWidget(this);
-    this->ui->gridLayout->addWidget(canvas, 0, 0);
-
-
-
+    setCentralWidget(canvas);
+    //this->ui->groupBox->addWidget(canvas);
 
     this->setWindowTitle(tr("Qrush!"));
+
 }
 
 MainWindow::~MainWindow()
