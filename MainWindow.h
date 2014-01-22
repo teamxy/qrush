@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "Highlighter.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -17,6 +19,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    Highlighter* highlighter;
 };
 
 #endif // MAINWINDOW_H

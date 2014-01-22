@@ -13,11 +13,13 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     MainWindow.cpp \
-    GLWidget.cpp
+    GLWidget.cpp \
+    Highlighter.cpp
 
 HEADERS  += \
     MainWindow.h \
-    GLWidget.h
+    GLWidget.h \
+    Highlighter.h
 
 FORMS    += \
     MainWindow.ui
