@@ -5,11 +5,13 @@
 
 GLWidget::GLWidget(QWidget *parent)
   : QGLWidget(QGLFormat(QGL::SampleBuffers), parent) {
+
     // leave widget parts in the north-west and only repaint new stuff
     setAttribute(Qt::WA_StaticContents);
 
     setCursor(QCursor(Qt::CrossCursor));
-}
+    brush = new Brush(&image, "");
+  }
 
 void GLWidget::paintEvent(QPaintEvent *event) {
   QPainter painter(this);
@@ -18,22 +20,9 @@ void GLWidget::paintEvent(QPaintEvent *event) {
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event) {
   if(isPressed){
-    //int x = event->x();
-    //int y = event->y();
-    //std::cout << "mouse drag: (" << event->x() << ", " << event->y() << ")" << std::endl;
-
-    // TODO implement v8 drawing here
-    drawLineTo(event->pos());
+    brush->onDrag(event->x(), event->y());
     update();
   }
-}
-
-// Temporary testing function
-void GLWidget::drawLineTo(const QPoint &endPoint){
-  QPainter painter(&image);
-  painter.setPen(Qt::red);
-  painter.drawLine(lastPoint, endPoint);
-  lastPoint = endPoint;
 }
 
 void GLWidget::resizeImage(QImage *image, const QSize &newSize) {

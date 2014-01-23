@@ -32,7 +32,6 @@ MainWindow::~MainWindow()
 void MainWindow::log(const QString &message)
 {
     QTime time;
-
     ui->jsConsoleTextEdit->append("["+time.currentTime().toString()+"] "+message);
 }
 

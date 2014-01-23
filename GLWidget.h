@@ -2,6 +2,7 @@
 #define GLWIDGET_H
 
 #include <QGLWidget>
+#include "Brush.h"
 
 class GLWidget : public QGLWidget {
   Q_OBJECT
@@ -23,6 +24,7 @@ class GLWidget : public QGLWidget {
     bool isPressed;
     QPoint lastPoint;
     QImage image;
+    Brush* brush;
 
 };
 
