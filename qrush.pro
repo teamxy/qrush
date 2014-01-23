@@ -19,11 +19,15 @@ QMAKE_LFLAGS += -v -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.7
 SOURCES += main.cpp \
     MainWindow.cpp \
     GLWidget.cpp \
+    Highlighter.cpp \
+    Brush.cpp
     Brush.cpp
 
 HEADERS  += \
     MainWindow.h \
     GLWidget.h \
+    Highlighter.h \
+    Brush.h
     Brush.h
 
 FORMS    += \
