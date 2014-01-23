@@ -1,4 +1,6 @@
 #include "Brush.h"
+#include <iostream>
+#include <functional>
 
 using namespace v8;
 
@@ -27,21 +29,42 @@ void Brush::onDrag(int x, int y){
   // Create a stack-allocated handle scope.
   HandleScope handle_scope(isolate);
 
+  // Create a new local context.
+  Local<Context> context = Local<Context>::New(isolate, _context);
+
+  Handle<Value> args[2];
+  args[0] = Number::New(isolate, x);
+  args[1] = Number::New(isolate, y);
+
+  Local<Function> fun = Local<Function>::New(isolate, dragFun);
+
+  fun->Call(context->Global(), 2, args);
+}
+
+Brush::Brush(QImage* _image, std::string file){
+  image = _image;
+
+  // TODO: get script from file
+  script = "function onDrag(x,y){drawPoint(x, y);};";
+
+  // Get the default Isolate created at startup.
+  Isolate* isolate = Isolate::GetCurrent();
+
+  // Create a stack-allocated handle scope.
+  HandleScope handle_scope(isolate);
+
   // define new global object
   Handle<ObjectTemplate> global = ObjectTemplate::New();
 
   // define point draw fun
-  Local<FunctionTemplate> fun = FunctionTemplate::New(isolate, DrawPointCallback);
-
-  // add log function
-  global->Set(String::NewFromUtf8(isolate, "drawPoint"), fun);
-
-  // set x and y
-  global->Set(String::NewFromUtf8(isolate, "x"), Number::New(isolate, x));
-  global->Set(String::NewFromUtf8(isolate, "y"), Number::New(isolate, y));
+  Local<FunctionTemplate> dpcFun = FunctionTemplate::New(isolate, DrawPointCallback);
+  global->Set(isolate, "drawPoint", dpcFun);
 
   // Create a new context.
   Handle<Context> context = Context::New(isolate, NULL, global);
+
+  // Persist context globally
+  _context.Reset(isolate, context);
 
   // Enter the context for compiling and running the hello world script.
   Context::Scope context_scope(context);
@@ -50,15 +73,18 @@ void Brush::onDrag(int x, int y){
   Handle<String> source = String::NewFromUtf8(isolate, script);
 
   // Compile the source code.
-  Handle<Script> script = Script::Compile(source);
+  Handle<Script> s = Script::Compile(source);
 
-  // Run the script to get the result.
-  Handle<Value> result = script->Run();
-}
+  // Run the script
+  s->Run();
 
-Brush::Brush(QImage* _image, std::string file){
-  image = _image;
+  // retrieve the ondrag function from the global object
+  Handle<Object> glob = context->Global();
+  Handle<Value> value = glob->Get(String::NewFromUtf8(isolate, "onDrag"));
 
-  // TODO: get script from file
-  script = "drawPoint(x, y);";
+  // persist the ondrag function globally
+  if (value->IsFunction()) {
+    dragFun.Reset(isolate, Handle<Function>::Cast(value));
+  }
+
 }

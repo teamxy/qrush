@@ -4,6 +4,7 @@
 #include <QImage>
 #include <QPainter>
 #include <v8.h>
+#include <string>
 
 class Brush {
   public:
@@ -13,6 +14,8 @@ class Brush {
 
   private:
     char* script;
+    v8::Persistent<v8::Function> dragFun;
+    v8::Persistent<v8::Context> _context;
 };
 
 #endif /* end of include guard */
