@@ -7,19 +7,14 @@ Highlighter::Highlighter(QTextDocument* parent) : QSyntaxHighlighter(parent)
     keywordFormat.setForeground(Qt::darkBlue);
     keywordFormat.setFontWeight(QFont::Bold);
     QStringList keywordPatterns;
+
     keywordPatterns << "\\bvar\\b" << "\\bfunction\\b" << "\\bif\\b"
-                    << "\\belse\\b" << "\\;\\b" << "\\breturn\\b"
+                    << "\\belse\\b" << "\\;" << "\\breturn\\b"
                     << "\\break\\b" << "\\bswitch\\b" << "\\bfor\\b"
                     << "\\bwhile\\b" << "\\bthis\\b" << "\\bswitch\\b"
                     << "\\bnull\\b" << "\\bundefined\\b" << "\\btrue\\b"
                     << "\\bfalse\\b" << "\\bcase\\b" << "\\bcontinue\\b"
                     << "\\bbreak\\b" << "\\bcase\\b" << "\\bdefault\\b" ;
-
-    foreach (const QString &pattern, keywordPatterns) {
-        rule.pattern = QRegExp(pattern);
-        rule.format = keywordFormat;
-        highlightingRules.append(rule);
-    }
 
     singleLineCommentFormat.setForeground(Qt::darkGray);
     rule.pattern = QRegExp("//[^\n]*");
@@ -31,9 +26,8 @@ Highlighter::Highlighter(QTextDocument* parent) : QSyntaxHighlighter(parent)
     commentStartExpression = QRegExp("/\\*");
     commentEndExpression = QRegExp("\\*/");
 
-    //functionFormat.setFontItalic(true);
     functionFormat.setForeground(Qt::darkMagenta);
-    rule.pattern = QRegExp("\\b[A-Za-z0-9_]+(?=\\()");
+    rule.pattern = QRegExp("\\b[A-Za-z0-9_]+\\s*(?=\\()");
     rule.format = functionFormat;
     highlightingRules.append(rule);
 
@@ -46,6 +40,12 @@ Highlighter::Highlighter(QTextDocument* parent) : QSyntaxHighlighter(parent)
     rule.pattern = QRegExp("\'.*\'");
     rule.format = singleQuotationFormat;
     highlightingRules.append(rule);
+
+    foreach (const QString &pattern, keywordPatterns) {
+        rule.pattern = QRegExp(pattern);
+        rule.format = keywordFormat;
+        highlightingRules.append(rule);
+    }
 
 }
 

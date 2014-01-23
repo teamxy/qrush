@@ -17,6 +17,11 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void log(const QString &message);
+
+public slots:
+    void saveButtonClicked();
+
 private:
     Ui::MainWindow *ui;
     Highlighter* highlighter;
