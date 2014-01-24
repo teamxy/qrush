@@ -10,7 +10,6 @@ GLWidget::GLWidget(QWidget *parent)
     setAttribute(Qt::WA_StaticContents);
 
     setCursor(QCursor(Qt::CrossCursor));
-    brush = new Brush(&image, "");
   }
 
 void GLWidget::paintEvent(QPaintEvent *event) {
@@ -44,6 +43,11 @@ void GLWidget::resizeEvent(QResizeEvent *event) {
     update();
   }
   QWidget::resizeEvent(event);
+}
+
+void GLWidget::setBrush(std::shared_ptr<Brush> brush){
+  this->brush = brush;
+  brush->setImage(&image);
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *event) {

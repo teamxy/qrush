@@ -47,6 +47,13 @@
       <widget class="QComboBox" name="comboBox"/>
      </item>
      <item>
+      <widget class="QPushButton" name="addButton">
+       <property name="text">
+        <string>Add</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QTextEdit" name="jsTextEdit">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">

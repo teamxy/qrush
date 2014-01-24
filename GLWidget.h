@@ -14,6 +14,7 @@ class GLWidget : public QGLWidget {
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+    void setBrush(std::shared_ptr<Brush> brush);
 
   protected:
     void paintEvent(QPaintEvent *event);
@@ -25,7 +26,7 @@ class GLWidget : public QGLWidget {
     bool isPressed;
     QPoint lastPoint;
     QImage image;
-    Brush* brush;
+    std::shared_ptr<Brush> brush;
 
 };
 

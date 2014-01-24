@@ -2,29 +2,34 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "GLWidget.h"
+#include <unordered_map>
 
 #include "Highlighter.h"
 
 namespace Ui {
-class MainWindow;
+  class MainWindow;
 }
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
+  public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
     void log(const QString &message);
 
-public slots:
-    void saveButtonClicked();
+    public slots:
+      void saveButtonClicked();
+    void addNewBrush();
 
-private:
+  private:
     Ui::MainWindow *ui;
     Highlighter* highlighter;
+    std::unordered_map<std::string, std::shared_ptr<Brush>> brushes;
+    GLWidget* canvas;
 };
 
 #endif // MAINWINDOW_H

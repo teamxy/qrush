@@ -16,6 +16,7 @@ static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* y = Integer::Cast(*args[1]);
 
   QPainter painter(image);
+  // TODO let the user set the color via JS
   painter.setPen(Qt::red);
   painter.drawPoint(x->Value(), y->Value());
 }
@@ -41,11 +42,12 @@ void Brush::onDrag(int x, int y){
   fun->Call(context->Global(), 2, args);
 }
 
-Brush::Brush(QImage* _image, std::string file){
+// TODO: make this static?
+void Brush::setImage(QImage* _image){
   image = _image;
+}
 
-  // TODO: get script from file
-  script = "function onDrag(x,y){drawPoint(x, y);};";
+Brush::Brush(char* script){
 
   // Get the default Isolate created at startup.
   Isolate* isolate = Isolate::GetCurrent();
