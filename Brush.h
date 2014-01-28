@@ -8,7 +8,7 @@
 
 class Brush {
   public:
-    Brush(char* script);
+    Brush(QString script);
     // TODO implement onClick, onRelease
     void onDrag(int x, int y);
     void setImage(QImage* _image);

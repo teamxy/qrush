@@ -22,9 +22,25 @@ static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
   painter.drawPoint(x->Value(), y->Value());
 }
 
+static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 2) return;
+  HandleScope scope(args.GetIsolate());
+  Integer* x1 = Integer::Cast(*args[0]);
+  Integer* y1 = Integer::Cast(*args[1]);
+  Integer* x2 = Integer::Cast(*args[2]);
+  Integer* y2 = Integer::Cast(*args[3]);
+
+  Integer* color = Integer::Cast(*args[4]);
+
+  QPainter painter(image);
+
+  painter.setPen(QColor(color->IntegerValue()));
+  painter.drawLine(x1->IntegerValue(), y1->IntegerValue(), x2->IntegerValue(), y2->IntegerValue());
+}
+
 // TODO: implement lots of more QPainter mappings
 
-void Brush::onDrag(int x, int y){
+void Brush::onDrag(int x, int y) {
   // Get the default Isolate created at startup.
   Isolate* isolate = Isolate::GetCurrent();
 
@@ -44,11 +60,11 @@ void Brush::onDrag(int x, int y){
 }
 
 // TODO: make this static?
-void Brush::setImage(QImage* _image){
+void Brush::setImage(QImage* _image) {
   image = _image;
 }
 
-Brush::Brush(char* script){
+Brush::Brush(QString script) {
 
   // Get the default Isolate created at startup.
   Isolate* isolate = Isolate::GetCurrent();
@@ -61,7 +77,10 @@ Brush::Brush(char* script){
 
   // define point draw fun
   Local<FunctionTemplate> dpcFun = FunctionTemplate::New(isolate, DrawPointCallback);
-  global->Set(isolate, "drawPoint", dpcFun);
+  global->Set(isolate, "point", dpcFun);
+
+  Local<FunctionTemplate> dlFun = FunctionTemplate::New(isolate, DrawLineCallback);
+  global->Set(isolate, "line", dlFun);
 
   // Create a new context.
   Handle<Context> context = Context::New(isolate, NULL, global);
@@ -73,7 +92,7 @@ Brush::Brush(char* script){
   Context::Scope context_scope(context);
 
   // Create a string containing the JavaScript source code.
-  Handle<String> source = String::NewFromUtf8(isolate, script);
+  Handle<String> source = String::NewFromUtf8(isolate, script.toStdString().data());
 
   // Compile the source code.
   Handle<Script> s = Script::Compile(source);
