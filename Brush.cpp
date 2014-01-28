@@ -14,10 +14,11 @@ static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
   HandleScope scope(args.GetIsolate());
   Integer* x = Integer::Cast(*args[0]);
   Integer* y = Integer::Cast(*args[1]);
+  Integer* color = Integer::Cast(*args[2]);
 
   QPainter painter(image);
-  // TODO let the user set the color via JS
-  painter.setPen(Qt::red);
+
+  painter.setPen(QColor(color->IntegerValue()));
   painter.drawPoint(x->Value(), y->Value());
 }
 

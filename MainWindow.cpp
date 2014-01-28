@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   setCentralWidget(canvas);
 
   // temporary to prevent crashing until fully implemented
-  std::shared_ptr<Brush> brush(new Brush("function onDrag(x,y){drawPoint(x, y);};"));
+  std::shared_ptr<Brush> brush(new Brush("function onDrag(x,y){drawPoint(x, y, 0x00FFFF);};"));
   brushes["bumblebee"] = brush;
   canvas->setBrush(brush);
 
