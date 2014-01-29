@@ -46,13 +46,8 @@
      <item>
       <widget class="QComboBox" name="comboBox">
        <property name="currentText">
-        <string>pen.js</string>
+        <string/>
        </property>
-       <item>
-        <property name="text">
-         <string>pen.js</string>
-        </property>
-       </item>
       </widget>
      </item>
      <item>
@@ -64,6 +59,9 @@
      </item>
      <item>
       <widget class="QTextEdit" name="jsTextEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
          <horstretch>0</horstretch>
@@ -102,7 +100,7 @@ p, li { white-space: pre-wrap; }
         <bool>false</bool>
        </property>
        <property name="placeholderText">
-        <string notr="true"/>
+        <string notr="true">Add a new brush and type your JavaScript Code here :)</string>
        </property>
       </widget>
      </item>
