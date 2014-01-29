@@ -111,26 +111,30 @@ void Brush::onDrag(int x, int y) {
 
 
   Local<Function> fun = Local<Function>::New(isolate, dragFun);
+
   TryCatch tryCatch;
+
 
   Handle<Value> result = fun->Call(context->Global(), 2, args);
 
-  // TODO: Catch runtime exceptions
+  // catch runtime errors
 
-  /*
-  if(result.IsEmpty()) {
+  if(tryCatch.HasCaught()) {
+
+      HandleScope handleScope(isolate);
+
+      // somehow tryCatch.Exception() causes a seg fault...
 
       //String::Utf8Value exception(tryCatch.Exception());
 
-      // catch runtime errors
-      std::cout << "runtime errrrrror:" << std::endl;
+      String::Utf8Value stackTrace(tryCatch.StackTrace());
 
       compileError = true;
-      //((MainWindow*) parent)->logError(getErrorMessage(isolate, &tryCatch));
+      ((MainWindow*) parent)->logError(*stackTrace);
 
       return;
 
-  }*/
+  }
 }
 
 // TODO: make this static?
@@ -169,7 +173,7 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
   Handle<String> sourceHandle = String::NewFromUtf8(isolate, source.toStdString().data());
 
   // Compile the source code.
-  Handle<String> scriptFileName = String::NewFromUtf8(isolate, name.toStdString().data());;
+  Handle<String> scriptFileName = String::NewFromUtf8(isolate, name.toStdString().data());
   TryCatch tryCatch;
   Handle<Script> script = Script::Compile(sourceHandle, scriptFileName);
 
