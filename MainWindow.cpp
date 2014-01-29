@@ -17,10 +17,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   canvas = new GLWidget(this);
   setCentralWidget(canvas);
 
-  // temporary to prevent crashing until fully implemented
-  std::shared_ptr<Brush> brush(new Brush(this, "var y0, x0; function onDrag(x,y){line(x0,y0,x, y, 0xFF0000); x0=x; y0=y;};"));
-  canvas->setBrush(brush);
-
   highlighter = new Highlighter(ui->jsTextEdit->document());
 
   setWindowTitle(tr("Qrush!"));
@@ -69,7 +65,6 @@ void MainWindow::logError(const QString &message) {
     log(formattedMessage);
 }
 
-// TODO save into file, then reparse
 void MainWindow::saveButtonClicked() {
   QString source = ui->jsTextEdit->toPlainText();
 

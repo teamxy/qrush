@@ -18,6 +18,7 @@ void GLWidget::paintEvent(QPaintEvent *event) {
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event) {
+  if(!brush){ return; }
   if(isPressed){
     brush->onDrag(event->x(), event->y());
     update();
@@ -51,6 +52,7 @@ void GLWidget::setBrush(std::shared_ptr<Brush> brush){
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *event) {
+  if(!brush){ return; }
   isPressed = true;
   brush->onClick(event->x(), event->y());
   update();
@@ -58,6 +60,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
+  if(!brush){ return; }
   isPressed = false;
   brush->onRelease(event->x(), event->y());
   update();
