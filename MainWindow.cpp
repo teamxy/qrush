@@ -88,6 +88,8 @@ void MainWindow::saveButtonClicked() {
 void MainWindow::addNewBrush() {
   log("new Brush");
 
+  // TODO: make separate brush directory
+
   // make a new input dialog
   bool ok;
   QString brushName = QInputDialog::getText(this, tr("New Brush"), tr("Brush name:"), QLineEdit::Normal, "", &ok);

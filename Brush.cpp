@@ -142,7 +142,7 @@ void Brush::onDrag(int x, int y) {
 }
 
 void Brush::onRelease(int x, int y){
-  runV8Callback(x, y, clickFun);
+  runV8Callback(x, y, releaseFun);
 }
 
 // TODO: make this static?
