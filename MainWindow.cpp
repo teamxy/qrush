@@ -5,6 +5,9 @@
 #include <QTime>
 #include <QInputDialog>
 #include <QFile>
+#include <QDir>
+
+#include <iostream>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
@@ -26,6 +29,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   connect(ui->saveButton, SIGNAL(clicked()), this, SLOT(saveButtonClicked()));
   connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addNewBrush()));
   connect(ui->comboBox, SIGNAL(currentTextChanged(QString)), SLOT(brushChanged(QString)));
+
+  // load all js files in the current working directory
+
+  QDir dir;
+  dir.setFilter(QDir::Files);
+
+  QStringList list = dir.entryList();
+
+  for(int i = 0; i < list.size(); ++i) {
+      QString name = list.at(i);
+
+      if(!name.endsWith(".js"))
+          continue;
+
+      ui->comboBox->addItem(name);
+  }
 
   log("Ready :)");
 }
@@ -73,7 +92,8 @@ void MainWindow::addNewBrush() {
   bool ok;
   QString brushName = QInputDialog::getText(this, tr("New Brush"), tr("Brush name:"), QLineEdit::Normal, "", &ok);
 
-  // TODO: Add .js file extensios and be sure the brush with this file name does not already exist
+  if(!brushName.endsWith(".js"))
+      brushName.append(".js");
 
   if (ok && !brushName.isEmpty()) {
     log("New brush "+brushName);
@@ -93,6 +113,9 @@ void MainWindow::addNewBrush() {
 }
 
 void MainWindow::brushChanged(QString brushName) {
+
+    ui->jsTextEdit->setEnabled(true);
+
     QFile file(brushName);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
     QString source = file.readAll();
@@ -105,6 +128,6 @@ void MainWindow::brushChanged(QString brushName) {
 
     // TODO: what do we need the hash map for?
 
-
     log(brushName + " loaded");
+
 }
