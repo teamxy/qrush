@@ -44,6 +44,15 @@ static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
   painter.drawLine(x1->IntegerValue(), y1->IntegerValue(), x2->IntegerValue(), y2->IntegerValue());
 }
 
+static void LogCallback(const FunctionCallbackInfo<Value>& args) {
+  HandleScope scope(args.GetIsolate());
+
+  String::Utf8Value msg(args[0]->ToString());
+
+  MainWindow* window = (MainWindow*) QApplication::activeWindow();
+  window->log(*msg);
+}
+
 
 QString getErrorMessage(Isolate* isolate, TryCatch* tryCatch) {
   QString errorStr;
@@ -167,6 +176,9 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
   Local<FunctionTemplate> dlFun = FunctionTemplate::New(isolate, DrawLineCallback);
   global->Set(isolate, "line", dlFun);
+
+  Local<FunctionTemplate> logFun = FunctionTemplate::New(isolate, LogCallback);
+  global->Set(isolate, "log", logFun);
 
   // Create a new context.
   Handle<Context> context = Context::New(isolate, NULL, global);
