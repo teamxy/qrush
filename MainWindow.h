@@ -23,8 +23,9 @@ class MainWindow : public QMainWindow
     void logError(const QString &message);
 
   public slots:
-      void saveButtonClicked();
+    void saveButtonClicked();
     void addNewBrush();
+    void brushChanged(QString brushName);
 
   private:
     Ui::MainWindow *ui;

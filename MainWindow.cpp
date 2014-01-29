@@ -4,6 +4,7 @@
 #include "Brush.h"
 #include <QTime>
 #include <QInputDialog>
+#include <QFile>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
@@ -24,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   connect(ui->saveButton, SIGNAL(clicked()), this, SLOT(saveButtonClicked()));
   connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addNewBrush()));
+  connect(ui->comboBox, SIGNAL(currentTextChanged(QString)), SLOT(brushChanged(QString)));
 
   log("Ready :)");
 }
@@ -51,8 +53,17 @@ void MainWindow::logError(const QString &message) {
 
 // TODO save into file, then reparse
 void MainWindow::saveButtonClicked() {
-  log("save");
-  log(ui->jsTextEdit->toPlainText());
+  QString source = ui->jsTextEdit->toPlainText();
+
+  QFile file(ui->comboBox->currentText());
+  file.open(QIODevice::WriteOnly | QIODevice::Text);
+  file.write(source.toStdString().data());
+  file.close();
+
+  log(ui->comboBox->currentText() + " saved");
+
+  std::shared_ptr<Brush> brush(new Brush(this, source));
+  canvas->setBrush(brush);
 }
 
 void MainWindow::addNewBrush() {
@@ -60,15 +71,40 @@ void MainWindow::addNewBrush() {
 
   // make a new input dialog
   bool ok;
-  QString text = QInputDialog::getText(this, tr("New Brush"),
-      tr("Brush name:"), QLineEdit::Normal, "", &ok);
+  QString brushName = QInputDialog::getText(this, tr("New Brush"), tr("Brush name:"), QLineEdit::Normal, "", &ok);
 
-  if (ok && !text.isEmpty()) {
-    log(text);
+  // TODO: Add .js file extensios and be sure the brush with this file name does not already exist
+
+  if (ok && !brushName.isEmpty()) {
+    log("New brush "+brushName);
     // TODO: get script from input and put into file, then reparse files
-    std::shared_ptr<Brush> brush(new Brush(this, "function onDrag(x,y){drawPoint(x, y);};"));
-    brushes[text.toStdString()] = brush;
+    std::shared_ptr<Brush> brush(new Brush(this, "function onDrag(x,y){point(x, y);};"));
+    brushes[brushName.toStdString()] = brush;
     canvas->setBrush(brush);
-    // TODO add brush to combo box
+
+    ui->comboBox->addItem(brushName);
+
+    QFile file(brushName);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    file.close();
+
+    ui->comboBox->setCurrentText(brushName);
   }
+}
+
+void MainWindow::brushChanged(QString brushName) {
+    QFile file(brushName);
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    QString source = file.readAll();
+    file.close();
+
+    ui->jsTextEdit->setText(source);
+
+    std::shared_ptr<Brush> brush(new Brush(this, source));
+    canvas->setBrush(brush);
+
+    // TODO: what do we need the hash map for?
+
+
+    log(brushName + " loaded");
 }
