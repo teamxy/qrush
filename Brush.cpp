@@ -12,6 +12,8 @@ using namespace v8;
 // TODO improve this
 QImage* image;
 
+// TODO: implement lots of more QPainter mappings
+
 // Draw a simple point
 static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
   if (args.Length() < 2) return;
@@ -90,11 +92,12 @@ QString getErrorMessage(Isolate* isolate, TryCatch* tryCatch) {
   return errorStr;
 }
 
-// TODO: implement lots of more QPainter mappings
+void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
 
-void Brush::onDrag(int x, int y) {
-  if(compileError)
+  // if the script is not working or the function was not implemented
+  if(compileError || function.IsEmpty()){
       return;
+  }
 
   // Get the default Isolate created at startup.
   Isolate* isolate = Isolate::GetCurrent();
@@ -109,19 +112,15 @@ void Brush::onDrag(int x, int y) {
   args[0] = Number::New(isolate, x);
   args[1] = Number::New(isolate, y);
 
-
-  Local<Function> fun = Local<Function>::New(isolate, dragFun);
+  Local<Function> fun = Local<Function>::New(isolate, function);
 
   TryCatch tryCatch;
-
 
   Handle<Value> result = fun->Call(context->Global(), 2, args);
 
   // catch runtime errors
 
   if(tryCatch.HasCaught()) {
-
-      HandleScope handleScope(isolate);
 
       // somehow tryCatch.Exception() causes a seg fault...
 
@@ -131,10 +130,19 @@ void Brush::onDrag(int x, int y) {
 
       compileError = true;
       ((MainWindow*) parent)->logError(*stackTrace);
-
-      return;
-
   }
+}
+
+void Brush::onClick(int x, int y){
+  runV8Callback(x, y, clickFun);
+}
+
+void Brush::onDrag(int x, int y) {
+  runV8Callback(x, y, dragFun);
+}
+
+void Brush::onRelease(int x, int y){
+  runV8Callback(x, y, clickFun);
 }
 
 // TODO: make this static?
@@ -202,10 +210,20 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
   // retrieve the ondrag function from the global object
   Handle<Object> glob = context->Global();
-  Handle<Value> value = glob->Get(String::NewFromUtf8(isolate, "onDrag"));
+  Handle<Value> onClickVal = glob->Get(String::NewFromUtf8(isolate, "onClick"));
+  Handle<Value> onDragVal = glob->Get(String::NewFromUtf8(isolate, "onDrag"));
+  Handle<Value> onReleaseVal = glob->Get(String::NewFromUtf8(isolate, "onRelease"));
 
-  // persist the ondrag function globally
-  if (value->IsFunction()) {
-    dragFun.Reset(isolate, Handle<Function>::Cast(value));
+  // persist the functions globally
+  if (onClickVal->IsFunction()) {
+    dragFun.Reset(isolate, Handle<Function>::Cast(onClickVal));
+  }
+
+  if (onDragVal->IsFunction()) {
+    dragFun.Reset(isolate, Handle<Function>::Cast(onDragVal));
+  }
+
+  if (onReleaseVal->IsFunction()) {
+    dragFun.Reset(isolate, Handle<Function>::Cast(onReleaseVal));
   }
 }

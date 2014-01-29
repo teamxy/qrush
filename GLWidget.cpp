@@ -52,9 +52,13 @@ void GLWidget::setBrush(std::shared_ptr<Brush> brush){
 
 void GLWidget::mousePressEvent(QMouseEvent *event) {
   isPressed = true;
+  brush->onClick(event->x(), event->y());
+  update();
 }
 
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
   isPressed = false;
+  brush->onRelease(event->x(), event->y());
+  update();
 }
