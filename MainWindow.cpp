@@ -9,6 +9,23 @@
 
 #include <iostream>
 
+// TODO put in some file
+const static QString BOILERPLATE_JS =
+"var x0, y0;\n\
+\n\
+function onRelease(x,y){\n\
+  x0 = undefined;\n\
+  y0 = undefined;\n\
+}\n\
+\n\
+function onDrag(x,y){\n\
+if(x0 && y0){\n\
+  line(x0,y0,x, y, 0x00FF00);\n\
+}\n\
+  x0 = x;\n\
+  y0 = y;\n\
+}";
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
 
@@ -16,10 +33,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   canvas = new GLWidget(this);
   setCentralWidget(canvas);
-
-  // temporary to prevent crashing until fully implemented
-  std::shared_ptr<Brush> brush(new Brush(this, "var y0, x0; function onDrag(x,y){line(x0,y0,x, y, 0xFF0000); x0=x; y0=y;};"));
-  canvas->setBrush(brush);
 
   highlighter = new Highlighter(ui->jsTextEdit->document());
 
@@ -69,7 +82,6 @@ void MainWindow::logError(const QString &message) {
     log(formattedMessage);
 }
 
-// TODO save into file, then reparse
 void MainWindow::saveButtonClicked() {
   QString source = ui->jsTextEdit->toPlainText();
 
@@ -106,6 +118,7 @@ void MainWindow::addNewBrush() {
     file.close();
 
     ui->comboBox->setCurrentText(brushName);
+    ui->jsTextEdit->setText(BOILERPLATE_JS);
   }
 }
 
