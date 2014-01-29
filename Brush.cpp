@@ -228,7 +228,7 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
   // persist the functions globally
   if (onClickVal->IsFunction()) {
-    dragFun.Reset(isolate, Handle<Function>::Cast(onClickVal));
+    clickFun.Reset(isolate, Handle<Function>::Cast(onClickVal));
   }
 
   if (onDragVal->IsFunction()) {
@@ -236,6 +236,6 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
   }
 
   if (onReleaseVal->IsFunction()) {
-    dragFun.Reset(isolate, Handle<Function>::Cast(onReleaseVal));
+    releaseFun.Reset(isolate, Handle<Function>::Cast(onReleaseVal));
   }
 }
