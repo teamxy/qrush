@@ -8,7 +8,7 @@
 
 class Brush {
   public:
-    Brush(QObject* parent, QString script);
+    Brush(QObject* parent, QString script, QString name = "unnamed.js");
     // TODO implement onClick, onRelease
     void onDrag(int x, int y);
     void setImage(QImage* _image);

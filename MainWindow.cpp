@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   setCentralWidget(canvas);
 
   // temporary to prevent crashing until fully implemented
-  std::shared_ptr<Brush> brush(new Brush(this, "function onDrag(x,y){line(0,0,x, y, 0xFF0000);};"));
+  std::shared_ptr<Brush> brush(new Brush(this, "function onDrag(x,y){line(0,0,x, y, 0xFF0000);-.-};"));
   brushes["bumblebee"] = brush;
   canvas->setBrush(brush);
 
@@ -37,6 +37,16 @@ MainWindow::~MainWindow() {
 void MainWindow::log(const QString &message) {
   QTime time;
   ui->jsConsoleTextEdit->append("["+time.currentTime().toString()+"] "+message);
+}
+
+void MainWindow::logError(const QString &message) {
+    QString formattedMessage;
+
+    formattedMessage.append("<font color='red' style='white-space: pre'>");
+    formattedMessage.append(message);
+    formattedMessage.append("</font>");
+
+    log(formattedMessage);
 }
 
 // TODO save into file, then reparse

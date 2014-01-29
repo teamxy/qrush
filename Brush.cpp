@@ -42,6 +42,55 @@ static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
   painter.drawLine(x1->IntegerValue(), y1->IntegerValue(), x2->IntegerValue(), y2->IntegerValue());
 }
 
+
+QString getErrorMessage(v8::Isolate* isolate, v8::TryCatch* tryCatch) {
+  QString errorStr;
+
+  HandleScope handleScope(isolate);
+  String::Utf8Value exception(tryCatch->Exception());
+  const char* exceptionStr = *exception;
+  Handle<v8::Message> message = tryCatch->Message();
+
+  if (message.IsEmpty()) {
+    errorStr =  exceptionStr;
+  } else {
+    String::Utf8Value filename(message->GetScriptResourceName());
+    int linenum = message->GetLineNumber();
+
+    errorStr.append(*filename);
+    errorStr.append(": ");
+    errorStr.append(linenum);
+    errorStr.append(exceptionStr);
+    errorStr.append("\n");
+
+    // print line of source code.
+
+    errorStr.append(*String::Utf8Value(message->GetSourceLine()));
+    errorStr.append("\n");
+
+    // fill padding with empty chars to point to the error pos with ^
+
+    int start = message->GetStartColumn();
+    for (int i = 0; i < start; i++) {
+      errorStr.append(" ");
+    }
+
+    int end = message->GetEndColumn();
+    for (int i = start; i < end; i++) {
+      errorStr.append("^");
+    }
+
+    errorStr.append("\n");
+
+    String::Utf8Value stackTrace(tryCatch->StackTrace());
+    if (stackTrace.length() > 0) {
+      errorStr.append(*stackTrace);
+    }
+  }
+
+  return errorStr;
+}
+
 // TODO: implement lots of more QPainter mappings
 
 void Brush::onDrag(int x, int y) {
@@ -71,7 +120,7 @@ void Brush::setImage(QImage* _image) {
   image = _image;
 }
 
-Brush::Brush(QObject* parent, QString source) : compileError(false) {
+Brush::Brush(QObject* parent, QString source, QString name) : compileError(false) {
 
   // Get the default Isolate created at startup.
   Isolate* isolate = Isolate::GetCurrent();
@@ -102,17 +151,31 @@ Brush::Brush(QObject* parent, QString source) : compileError(false) {
   Handle<String> sourceHandle = String::NewFromUtf8(isolate, source.toStdString().data());
 
   // Compile the source code.
-  v8::TryCatch try_catch;
-  Handle<Script> script = Script::Compile(sourceHandle);
+  Handle<String> scriptFileName = String::NewFromUtf8(isolate, name.toStdString().data());;
+  v8::TryCatch tryCatch;
+  Handle<Script> script = Script::Compile(sourceHandle, scriptFileName);
 
   if(script.IsEmpty()) {
 
-      // errors during compilation
+      // catch compilation errors
 
       compileError = true;
+      ((MainWindow*) parent)->logError(getErrorMessage(isolate, &tryCatch));
 
-      v8::HandleScope handle_scope(isolate);
-      v8::String::Utf8Value exception(try_catch.Exception());
+      return;
+
+  }
+
+
+  std::cout << "compiled" << std::endl;
+
+  Handle<v8::Value> result = script->Run();
+  if(result.IsEmpty()) {
+      compileError = true;
+
+      std::cout << "runtime error!!" << std::endl;
+
+      String::Utf8Value exception(tryCatch.Exception());
       const char* exceptionStr = *exception;
 
       QString errorMessage;
@@ -122,12 +185,7 @@ Brush::Brush(QObject* parent, QString source) : compileError(false) {
       ((MainWindow*) parent)->log(errorMessage);
 
       return;
-
   }
-
-  std::cout << "compiled" << std::endl;
-  // Run the script
-  script->Run();
 
   // retrieve the ondrag function from the global object
   Handle<Object> glob = context->Global();

@@ -20,6 +20,7 @@ class MainWindow : public QMainWindow
     ~MainWindow();
 
     void log(const QString &message);
+    void logError(const QString &message);
 
   public slots:
       void saveButtonClicked();
