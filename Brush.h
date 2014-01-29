@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <v8.h>
 #include <string>
+#include <Brush.h>
 
 class Brush {
   public:
