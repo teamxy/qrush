@@ -5,15 +5,16 @@
 #include <QTime>
 #include <QInputDialog>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
-{
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
+
+  ui->jsConsoleTextEdit->setText("");
 
   canvas = new GLWidget(this);
   setCentralWidget(canvas);
 
   // temporary to prevent crashing until fully implemented
-  std::shared_ptr<Brush> brush(new Brush("function onDrag(x,y){line(0,0,x, y, 0xFF0000);};"));
+  std::shared_ptr<Brush> brush(new Brush(this, "function onDrag(x,y){line(0,0,x, y, 0xFF0000);};"));
   brushes["bumblebee"] = brush;
   canvas->setBrush(brush);
 
@@ -21,36 +22,30 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   setWindowTitle(tr("Qrush!"));
 
-  ui->jsConsoleTextEdit->setText("");
-
   connect(ui->saveButton, SIGNAL(clicked()), this, SLOT(saveButtonClicked()));
   connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addNewBrush()));
 
   log("Ready :)");
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
   delete ui;
   delete highlighter;
 }
 
 // Todo make this available to V8/Brush
-void MainWindow::log(const QString &message)
-{
+void MainWindow::log(const QString &message) {
   QTime time;
   ui->jsConsoleTextEdit->append("["+time.currentTime().toString()+"] "+message);
 }
 
 // TODO save into file, then reparse
-void MainWindow::saveButtonClicked()
-{
+void MainWindow::saveButtonClicked() {
   log("save");
   log(ui->jsTextEdit->toPlainText());
 }
 
-void MainWindow::addNewBrush()
-{
+void MainWindow::addNewBrush() {
   log("new Brush");
 
   // make a new input dialog
@@ -58,14 +53,12 @@ void MainWindow::addNewBrush()
   QString text = QInputDialog::getText(this, tr("New Brush"),
       tr("Brush name:"), QLineEdit::Normal, "", &ok);
 
-  if (ok && !text.isEmpty()){
+  if (ok && !text.isEmpty()) {
     log(text);
     // TODO: get script from input and put into file, then reparse files
-    std::shared_ptr<Brush> brush(new Brush("function onDrag(x,y){drawPoint(x, y);};"));
+    std::shared_ptr<Brush> brush(new Brush(this, "function onDrag(x,y){drawPoint(x, y);};"));
     brushes[text.toStdString()] = brush;
     canvas->setBrush(brush);
     // TODO add brush to combo box
   }
-
-
 }

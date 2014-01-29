@@ -1,6 +1,10 @@
-#include "Brush.h"
 #include <iostream>
 #include <functional>
+
+#include <QApplication>
+
+#include "Brush.h"
+#include "MainWindow.h"
 
 using namespace v8;
 
@@ -41,6 +45,9 @@ static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
 // TODO: implement lots of more QPainter mappings
 
 void Brush::onDrag(int x, int y) {
+  if(compileError)
+      return;
+
   // Get the default Isolate created at startup.
   Isolate* isolate = Isolate::GetCurrent();
 
@@ -64,7 +71,7 @@ void Brush::setImage(QImage* _image) {
   image = _image;
 }
 
-Brush::Brush(QString script) {
+Brush::Brush(QObject* parent, QString source) : compileError(false) {
 
   // Get the default Isolate created at startup.
   Isolate* isolate = Isolate::GetCurrent();
@@ -92,13 +99,35 @@ Brush::Brush(QString script) {
   Context::Scope context_scope(context);
 
   // Create a string containing the JavaScript source code.
-  Handle<String> source = String::NewFromUtf8(isolate, script.toStdString().data());
+  Handle<String> sourceHandle = String::NewFromUtf8(isolate, source.toStdString().data());
 
   // Compile the source code.
-  Handle<Script> s = Script::Compile(source);
+  v8::TryCatch try_catch;
+  Handle<Script> script = Script::Compile(sourceHandle);
 
+  if(script.IsEmpty()) {
+
+      // errors during compilation
+
+      compileError = true;
+
+      v8::HandleScope handle_scope(isolate);
+      v8::String::Utf8Value exception(try_catch.Exception());
+      const char* exceptionStr = *exception;
+
+      QString errorMessage;
+      errorMessage.append("<font color='red'>");
+      errorMessage.append(exceptionStr);
+      errorMessage.append("</font>");
+      ((MainWindow*) parent)->log(errorMessage);
+
+      return;
+
+  }
+
+  std::cout << "compiled" << std::endl;
   // Run the script
-  s->Run();
+  script->Run();
 
   // retrieve the ondrag function from the global object
   Handle<Object> glob = context->Global();
@@ -108,5 +137,4 @@ Brush::Brush(QString script) {
   if (value->IsFunction()) {
     dragFun.Reset(isolate, Handle<Function>::Cast(value));
   }
-
 }

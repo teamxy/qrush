@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow
 
     void log(const QString &message);
 
-    public slots:
+  public slots:
       void saveButtonClicked();
     void addNewBrush();
 
