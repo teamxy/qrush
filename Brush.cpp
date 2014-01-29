@@ -56,7 +56,31 @@ static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
 
   QPainter painter(image);
 
-  painter.fillRect(QRect(QPoint(x1->IntegerValue(), y1->IntegerValue()), QPoint(x2->IntegerValue(), y2->IntegerValue())), QColor(color->IntegerValue()));
+  painter.fillRect(
+              QRect(
+                  QPoint(x1->IntegerValue(), y1->IntegerValue()),
+                  QPoint(x2->IntegerValue(), y2->IntegerValue())),
+              QColor(color->IntegerValue())
+  );
+}
+
+static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 2) return;
+  HandleScope scope(args.GetIsolate());
+  Integer* x1 = Integer::Cast(*args[0]);
+  Integer* y1 = Integer::Cast(*args[1]);
+  Integer* x2 = Integer::Cast(*args[2]);
+  Integer* y2 = Integer::Cast(*args[3]);
+
+  Integer* color = Integer::Cast(*args[4]);
+
+  QPainter painter(image);
+  painter.setPen(QColor(color->IntegerValue()));
+  painter.drawEllipse(
+              QRect(
+                  QPoint(x1->IntegerValue(), y1->IntegerValue()),
+                  QPoint(x2->IntegerValue(), y2->IntegerValue()))
+  );
 }
 
 static void LogCallback(const FunctionCallbackInfo<Value>& args) {
@@ -194,6 +218,9 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
   Local<FunctionTemplate> drFun = FunctionTemplate::New(isolate, DrawRectCallback);
   global->Set(isolate, "rect", drFun);
+
+  Local<FunctionTemplate> elFun = FunctionTemplate::New(isolate, DrawEllipseCallback);
+  global->Set(isolate, "ellipse", elFun);
 
   Local<FunctionTemplate> logFun = FunctionTemplate::New(isolate, LogCallback);
   global->Set(isolate, "log", logFun);
