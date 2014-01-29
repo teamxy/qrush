@@ -17,6 +17,7 @@ class Brush {
     v8::Persistent<v8::Function> dragFun;
     v8::Persistent<v8::Context> _context;
     bool compileError;
+    QObject* parent;
 };
 
 #endif /* end of include guard */

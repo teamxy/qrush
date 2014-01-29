@@ -43,16 +43,15 @@ static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
 }
 
 
-QString getErrorMessage(v8::Isolate* isolate, v8::TryCatch* tryCatch) {
+QString getErrorMessage(Isolate* isolate, TryCatch* tryCatch) {
   QString errorStr;
 
   HandleScope handleScope(isolate);
   String::Utf8Value exception(tryCatch->Exception());
-  const char* exceptionStr = *exception;
-  Handle<v8::Message> message = tryCatch->Message();
+  Handle<Message> message = tryCatch->Message();
 
   if (message.IsEmpty()) {
-    errorStr =  exceptionStr;
+    errorStr = *exception;
   } else {
     String::Utf8Value filename(message->GetScriptResourceName());
     int linenum = message->GetLineNumber();
@@ -60,7 +59,7 @@ QString getErrorMessage(v8::Isolate* isolate, v8::TryCatch* tryCatch) {
     errorStr.append(*filename);
     errorStr.append(": ");
     errorStr.append(linenum);
-    errorStr.append(exceptionStr);
+    errorStr.append(*exception);
     errorStr.append("\n");
 
     // print line of source code.
@@ -110,9 +109,28 @@ void Brush::onDrag(int x, int y) {
   args[0] = Number::New(isolate, x);
   args[1] = Number::New(isolate, y);
 
-  Local<Function> fun = Local<Function>::New(isolate, dragFun);
 
-  fun->Call(context->Global(), 2, args);
+  Local<Function> fun = Local<Function>::New(isolate, dragFun);
+  TryCatch tryCatch;
+
+  Handle<Value> result = fun->Call(context->Global(), 2, args);
+
+  // TODO: Catch runtime exceptions
+
+  /*
+  if(result.IsEmpty()) {
+
+      //String::Utf8Value exception(tryCatch.Exception());
+
+      // catch runtime errors
+      std::cout << "runtime errrrrror:" << std::endl;
+
+      compileError = true;
+      //((MainWindow*) parent)->logError(getErrorMessage(isolate, &tryCatch));
+
+      return;
+
+  }*/
 }
 
 // TODO: make this static?
@@ -120,7 +138,7 @@ void Brush::setImage(QImage* _image) {
   image = _image;
 }
 
-Brush::Brush(QObject* parent, QString source, QString name) : compileError(false) {
+Brush::Brush(QObject* parent, QString source, QString name) : compileError(false), parent(parent) {
 
   // Get the default Isolate created at startup.
   Isolate* isolate = Isolate::GetCurrent();
@@ -152,7 +170,7 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
   // Compile the source code.
   Handle<String> scriptFileName = String::NewFromUtf8(isolate, name.toStdString().data());;
-  v8::TryCatch tryCatch;
+  TryCatch tryCatch;
   Handle<Script> script = Script::Compile(sourceHandle, scriptFileName);
 
   if(script.IsEmpty()) {
@@ -166,25 +184,16 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
   }
 
-
-  std::cout << "compiled" << std::endl;
-
-  Handle<v8::Value> result = script->Run();
+  Handle<Value> result = script->Run();
   if(result.IsEmpty()) {
+
+      // catch runtime errors
+
       compileError = true;
-
-      std::cout << "runtime error!!" << std::endl;
-
-      String::Utf8Value exception(tryCatch.Exception());
-      const char* exceptionStr = *exception;
-
-      QString errorMessage;
-      errorMessage.append("<font color='red'>");
-      errorMessage.append(exceptionStr);
-      errorMessage.append("</font>");
-      ((MainWindow*) parent)->log(errorMessage);
+      ((MainWindow*) parent)->logError(getErrorMessage(isolate, &tryCatch));
 
       return;
+
   }
 
   // retrieve the ondrag function from the global object
