@@ -19,7 +19,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   // temporary to prevent crashing until fully implemented
   std::shared_ptr<Brush> brush(new Brush(this, "var y0, x0; function onDrag(x,y){line(x0,y0,x, y, 0xFF0000); x0=x; y0=y;};"));
-  brushes["bumblebee"] = brush;
   canvas->setBrush(brush);
 
   highlighter = new Highlighter(ui->jsTextEdit->document());
@@ -99,10 +98,6 @@ void MainWindow::addNewBrush() {
 
   if (ok && !brushName.isEmpty()) {
     log("New brush "+brushName);
-    // TODO: get script from input and put into file, then reparse files
-    std::shared_ptr<Brush> brush(new Brush(this, "function onDrag(x,y){point(x, y);};"));
-    brushes[brushName.toStdString()] = brush;
-    canvas->setBrush(brush);
 
     ui->comboBox->addItem(brushName);
 
@@ -128,8 +123,5 @@ void MainWindow::brushChanged(QString brushName) {
     std::shared_ptr<Brush> brush(new Brush(this, source));
     canvas->setBrush(brush);
 
-    // TODO: what do we need the hash map for?
-
     log(brushName + " loaded");
-
 }

@@ -30,7 +30,6 @@ class MainWindow : public QMainWindow
   private:
     Ui::MainWindow *ui;
     Highlighter* highlighter;
-    std::unordered_map<std::string, std::shared_ptr<Brush>> brushes;
     GLWidget* canvas;
 };
 
