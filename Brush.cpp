@@ -67,8 +67,6 @@ static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
                        QPoint(x1->IntegerValue(), y1->IntegerValue()),
                        QPoint(x2->IntegerValue(), y2->IntegerValue()))
   );
-
-
 }
 
 static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
@@ -129,6 +127,33 @@ static void LogCallback(const FunctionCallbackInfo<Value>& args) {
   window->log(*msg);
 }
 
+// TODO make rgb values easier (wrap in object or array)
+static void GetDataCallback(const FunctionCallbackInfo<Value>& args) {
+
+  // Get the default Isolate created at startup.
+  Isolate* isolate = args.GetIsolate();
+
+  // Create a stack-allocated handle scope.
+  HandleScope handle_scope(isolate);
+
+  int width = image->width();
+  int height = image->height();
+  Handle<Array> pixels = Array::New(isolate, width * height);
+
+  // parse image data into js array
+  // TODO improve this, maybe get all pixels at once from image
+  for (int w = 0; w < width; w++) {
+    for (int h = 0; h < height; h++) {
+      // this is like the worst thing you can do if you want a fast app
+      int color = image->pixel(w, h);
+      pixels->Set(w * height + h, Integer::New(isolate, color));
+    }
+  }
+
+  // return the pixel values
+  args.GetReturnValue().Set(pixels);
+}
+
 
 QString getErrorMessage(Isolate* isolate, TryCatch* tryCatch) {
   QString errorStr;
@@ -150,7 +175,6 @@ QString getErrorMessage(Isolate* isolate, TryCatch* tryCatch) {
     errorStr.append("\n");
 
     // print line of source code.
-
     errorStr.append(*String::Utf8Value(message->GetSourceLine()));
     errorStr.append("\n");
 
@@ -193,36 +217,22 @@ void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
   // Create a new local context.
   Local<Context> context = Local<Context>::New(isolate, _context);
 
+  // Create a new context scope
   Context::Scope context_scope(context);
 
-  // parse image data into js array
-  // TODO improve this, maybe get all pixels at once from image
-  int width = image->width();
-  int height = image->height();
-  v8::Handle<v8::Array> pixels = v8::Array::New(isolate, width * height);
-  for (int w = 0; w < width; w++) {
-    for (int h = 0; h < height; h++) {
-      // this is like the worst thing you can do if you want a fast app
-      int color = image->pixel(w, h);
-      pixels->Set(w * height + h, Integer::New(isolate, color));
-    }
-  }
-
-  Handle<Value> args[5];
+  Handle<Value> args[4];
   args[0] = Number::New(isolate, x);
   args[1] = Number::New(isolate, y);
-  args[2] = Number::New(isolate, width);
-  args[3] = Number::New(isolate, height);
-  args[4] = pixels;
+  args[2] = Number::New(isolate, image->width());
+  args[3] = Number::New(isolate, image->height());
 
   Local<Function> fun = Local<Function>::New(isolate, function);
 
   TryCatch tryCatch;
 
-  Handle<Value> result = fun->Call(context->Global(), 5, args);
+  Handle<Value> result = fun->Call(context->Global(), 4, args);
 
   // catch runtime errors
-
   if(tryCatch.HasCaught()) {
 
       // somehow tryCatch.Exception() causes a seg fault...
@@ -265,10 +275,8 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
   Handle<ObjectTemplate> global = ObjectTemplate::New();
 
   //
-  // define draw function
+  // define global functions
   //
-
-  // TODO: Can we bind the functions on application startup somehow?
 
   Local<FunctionTemplate> dpcFun = FunctionTemplate::New(isolate, DrawPointCallback);
   global->Set(isolate, "point", dpcFun);
@@ -287,6 +295,9 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
   Local<FunctionTemplate> logFun = FunctionTemplate::New(isolate, LogCallback);
   global->Set(isolate, "log", logFun);
+
+  Local<FunctionTemplate> getDataFun = FunctionTemplate::New(isolate, GetDataCallback);
+  global->Set(isolate, "getColorData", getDataFun);
 
   // Create a new context.
   Handle<Context> context = Context::New(isolate, NULL, global);
@@ -308,27 +319,21 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
   if(script.IsEmpty()) {
 
       // catch compilation errors
-
       compileError = true;
       ((MainWindow*) parent)->logError(getErrorMessage(isolate, &tryCatch));
-
       return;
-
   }
 
   Handle<Value> result = script->Run();
   if(result.IsEmpty()) {
 
       // catch runtime errors
-
       compileError = true;
       ((MainWindow*) parent)->logError(getErrorMessage(isolate, &tryCatch));
-
       return;
-
   }
 
-  // retrieve the ondrag function from the global object
+  // retrieve the handler functions from the global object
   Handle<Object> glob = context->Global();
   Handle<Value> onClickVal = glob->Get(String::NewFromUtf8(isolate, "onClick"));
   Handle<Value> onDragVal = glob->Get(String::NewFromUtf8(isolate, "onDrag"));

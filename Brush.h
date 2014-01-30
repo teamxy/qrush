@@ -10,7 +10,6 @@
 class Brush {
   public:
     Brush(QObject* parent, QString script, QString name = "unnamed.js");
-    // TODO implement onClick, onRelease
     void onDrag(int x, int y);
     void onClick(int x, int y);
     void onRelease(int x, int y);
