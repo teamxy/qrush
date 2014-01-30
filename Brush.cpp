@@ -132,15 +132,33 @@ void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
   // Create a new local context.
   Local<Context> context = Local<Context>::New(isolate, _context);
 
-  Handle<Value> args[2];
+  Context::Scope context_scope(context);
+
+  // parse image data into js array
+  // TODO improve this, maybe get all pixels at once from image
+  int width = image->width();
+  int height = image->height();
+  v8::Handle<v8::Array> pixels = v8::Array::New(isolate, width * height);
+  for (int w = 0; w < width; w++) {
+    for (int h = 0; h < height; h++) {
+      // this is like the worst thing you can do if you want a fast app
+      int color = image->pixel(w, h);
+      pixels->Set(w * height + h, Integer::New(isolate, color));
+    }
+  }
+
+  Handle<Value> args[5];
   args[0] = Number::New(isolate, x);
   args[1] = Number::New(isolate, y);
+  args[2] = Number::New(isolate, width);
+  args[3] = Number::New(isolate, height);
+  args[4] = pixels;
 
   Local<Function> fun = Local<Function>::New(isolate, function);
 
   TryCatch tryCatch;
 
-  Handle<Value> result = fun->Call(context->Global(), 2, args);
+  Handle<Value> result = fun->Call(context->Global(), 5, args);
 
   // catch runtime errors
 
