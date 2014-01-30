@@ -29,7 +29,7 @@ static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
 }
 
 static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
-  if (args.Length() < 2) return;
+  if (args.Length() < 4) return;
   HandleScope scope(args.GetIsolate());
   Integer* x1 = Integer::Cast(*args[0]);
   Integer* y1 = Integer::Cast(*args[1]);
@@ -45,7 +45,7 @@ static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
 }
 
 static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
-  if (args.Length() < 2) return;
+  if (args.Length() < 4) return;
   HandleScope scope(args.GetIsolate());
   Integer* x1 = Integer::Cast(*args[0]);
   Integer* y1 = Integer::Cast(*args[1]);
@@ -54,9 +54,70 @@ static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
 
   Integer* color = Integer::Cast(*args[4]);
 
+  Value* fill = Boolean::Cast(*args[5]);
+
   QPainter painter(image);
 
-  painter.fillRect(QRect(QPoint(x1->IntegerValue(), y1->IntegerValue()), QPoint(x2->IntegerValue(), y2->IntegerValue())), QColor(color->IntegerValue()));
+  painter.setPen(QColor(color->IntegerValue()));
+
+  if(fill->BooleanValue())
+    painter.setBrush(QBrush(color->IntegerValue()));
+
+  painter.drawRect(QRect(
+                       QPoint(x1->IntegerValue(), y1->IntegerValue()),
+                       QPoint(x2->IntegerValue(), y2->IntegerValue()))
+  );
+
+
+}
+
+static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 4) return;
+  HandleScope scope(args.GetIsolate());
+  Integer* x1 = Integer::Cast(*args[0]);
+  Integer* y1 = Integer::Cast(*args[1]);
+  Integer* x2 = Integer::Cast(*args[2]);
+  Integer* y2 = Integer::Cast(*args[3]);
+
+  Integer* color = Integer::Cast(*args[4]);
+
+  Value* fill = Boolean::Cast(*args[5]);
+
+  QPainter painter(image);
+
+  painter.setPen(QColor(color->IntegerValue()));
+
+  if(fill->BooleanValue())
+    painter.setBrush(QBrush(color->IntegerValue()));
+
+  painter.drawEllipse(
+              QRect(
+                  QPoint(x1->IntegerValue(), y1->IntegerValue()),
+                  QPoint(x2->IntegerValue(), y2->IntegerValue()))
+  );
+}
+
+static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 3) return;
+  HandleScope scope(args.GetIsolate());
+  Integer* x = Integer::Cast(*args[0]);
+  Integer* y = Integer::Cast(*args[1]);
+  Integer* r = Integer::Cast(*args[2]);
+
+  Integer* color = Integer::Cast(*args[3]);
+
+  Value* fill = Boolean::Cast(*args[4]);
+
+  QPainter painter(image);
+
+  painter.setPen(QColor(color->IntegerValue()));
+
+  if(fill->BooleanValue())
+    painter.setBrush(QBrush(color->IntegerValue()));
+
+  painter.drawEllipse(
+                  QPoint(x->IntegerValue(), y->IntegerValue()), r->IntegerValue(), r->IntegerValue()
+  );
 }
 
 static void LogCallback(const FunctionCallbackInfo<Value>& args) {
@@ -203,7 +264,12 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
   // define new global object
   Handle<ObjectTemplate> global = ObjectTemplate::New();
 
-  // define point draw fun
+  //
+  // define draw function
+  //
+
+  // TODO: Can we bind the functions on application startup somehow?
+
   Local<FunctionTemplate> dpcFun = FunctionTemplate::New(isolate, DrawPointCallback);
   global->Set(isolate, "point", dpcFun);
 
@@ -212,6 +278,12 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
   Local<FunctionTemplate> drFun = FunctionTemplate::New(isolate, DrawRectCallback);
   global->Set(isolate, "rect", drFun);
+
+  Local<FunctionTemplate> elFun = FunctionTemplate::New(isolate, DrawEllipseCallback);
+  global->Set(isolate, "ellipse", elFun);
+
+  Local<FunctionTemplate> ciFun = FunctionTemplate::New(isolate, DrawCircleCallback);
+  global->Set(isolate, "circle", ciFun);
 
   Local<FunctionTemplate> logFun = FunctionTemplate::New(isolate, LogCallback);
   global->Set(isolate, "log", logFun);
