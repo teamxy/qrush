@@ -19,7 +19,7 @@ function onRelease(x, y, width, height){
 }
 ```
 
-x and y describe the current position of the mouse, width and height are the total size of the canvas. 
+`x` and `y` describe the current position of the mouse, `width` and `height` are the total size of the canvas. 
 
 ## Utility functions
 
