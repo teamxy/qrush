@@ -1,5 +1,5 @@
-#ifndef HIGHLIGHTER_H
-#define HIGHLIGHTER_H
+#ifndef QRUSH_HIGHLIGHTER_H_
+#define QRUSH_HIGHLIGHTER_H_
 
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
@@ -36,4 +36,4 @@ private:
     QTextCharFormat functionFormat;
 };
 
-#endif // HIGHLIGHTER_H
+#endif // QRUSH_HIGHLIGHTER_H_

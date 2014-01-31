@@ -1,5 +1,5 @@
-#ifndef _QRUSH_BRUSH_H_
-#define _QRUSH_BRUSH_H_
+#ifndef QRUSH_BRUSH_H_
+#define QRUSH_BRUSH_H_
 
 #include <QImage>
 #include <QPainter>

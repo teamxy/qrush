@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef QRUSH_MAINWINDOW_H_
+#define QRUSH_MAINWINDOW_H_
 
 #include <QMainWindow>
 #include "GLWidget.h"
@@ -33,4 +33,4 @@ class MainWindow : public QMainWindow
     GLWidget* canvas;
 };
 
-#endif // MAINWINDOW_H
+#endif // QRUSH_MAINWINDOW_H_

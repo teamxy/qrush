@@ -1,5 +1,5 @@
-#ifndef GLWIDGET_H
-#define GLWIDGET_H
+#ifndef QRUSH_GLWIDGET_H_
+#define QRUSH_GLWIDGET_H_
 
 #include <QGLWidget>
 #include <string>
@@ -30,4 +30,4 @@ class GLWidget : public QGLWidget {
 
 };
 
-#endif // GLWIDGET_H
+#endif // QRUSH_GLWIDGET_H_
