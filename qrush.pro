@@ -16,22 +16,21 @@ CONFIG += c++11
 QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.7
 QMAKE_LFLAGS += -v -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.7
 
-SOURCES += main.cpp \
-    MainWindow.cpp \
-    GLWidget.cpp \
-    Highlighter.cpp \
-    Brush.cpp
-    Brush.cpp
+SOURCES += src/main.cpp \
+    src/MainWindow.cpp \
+    src/GLWidget.cpp \
+    src/Highlighter.cpp \
+    src/Brush.cpp
+    src/Brush.cpp
 
 HEADERS  += \
-    MainWindow.h \
-    GLWidget.h \
-    Highlighter.h \
-    Brush.h
-    Brush.h
+    include/MainWindow.h \
+    include/GLWidget.h \
+    include/Highlighter.h \
+    include/Brush.h
 
 FORMS    += \
-    MainWindow.ui
+    ui/MainWindow.ui
 
 OTHER_FILES += \
     local.pri

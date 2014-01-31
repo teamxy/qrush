@@ -1,4 +1,4 @@
-#include "GLWidget.h"
+#include "../include/GLWidget.h"
 #include <QTimer>
 #include <iostream>
 #include <QMouseEvent>

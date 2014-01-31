@@ -1,7 +1,7 @@
-#include "MainWindow.h"
+#include "../include/MainWindow.h"
 #include "ui_mainwindow.h"
-#include "Highlighter.h"
-#include "Brush.h"
+#include "../include/Highlighter.h"
+#include "../include/Brush.h"
 #include <QTime>
 #include <QInputDialog>
 #include <QFile>
@@ -26,6 +26,8 @@ if(x0 && y0){\n\
   y0 = y;\n\
 }";
 
+const static QString SCRIPT_PATH = "js/";
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
 
@@ -44,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   // load all js files in the current working directory
 
-  QDir dir;
+  QDir dir(SCRIPT_PATH);
   dir.setFilter(QDir::Files);
 
   QStringList list = dir.entryList();
@@ -85,7 +87,7 @@ void MainWindow::logError(const QString &message) {
 void MainWindow::saveButtonClicked() {
   QString source = ui->jsTextEdit->toPlainText();
 
-  QFile file(ui->comboBox->currentText());
+  QFile file(SCRIPT_PATH + ui->comboBox->currentText());
   file.open(QIODevice::WriteOnly | QIODevice::Text);
   file.write(source.toStdString().data());
   file.close();
@@ -99,25 +101,21 @@ void MainWindow::saveButtonClicked() {
 void MainWindow::addNewBrush() {
   log("new Brush");
 
-  // TODO: make separate brush directory
-
   // make a new input dialog
   bool ok;
   QString brushName = QInputDialog::getText(this, tr("New Brush"), tr("Brush name:"), QLineEdit::Normal, "", &ok);
 
-  if(!brushName.endsWith(".js"))
-      brushName.append(".js");
+  // append js if needed
+  if(!brushName.endsWith(".js")) brushName.append(".js");
 
   if (ok && !brushName.isEmpty()) {
     log("New brush "+brushName);
 
+    // add to combobox
     ui->comboBox->addItem(brushName);
-
-    QFile file(brushName);
-    file.open(QIODevice::WriteOnly | QIODevice::Text);
-    file.close();
-
     ui->comboBox->setCurrentText(brushName);
+
+    // add some boilerplate code
     ui->jsTextEdit->setText(BOILERPLATE_JS);
   }
 }
@@ -126,7 +124,7 @@ void MainWindow::brushChanged(QString brushName) {
 
     ui->jsTextEdit->setEnabled(true);
 
-    QFile file(brushName);
+    QFile file(SCRIPT_PATH + brushName);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
     QString source = file.readAll();
     file.close();

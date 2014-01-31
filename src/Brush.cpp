@@ -3,8 +3,8 @@
 
 #include <QApplication>
 
-#include "Brush.h"
-#include "MainWindow.h"
+#include "../include/Brush.h"
+#include "../include/MainWindow.h"
 
 using namespace v8;
 
