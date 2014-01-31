@@ -156,6 +156,29 @@ static void GetDataCallback(const FunctionCallbackInfo<Value>& args) {
   args.GetReturnValue().Set(pixels);
 }
 
+static void GetWidthCallback(const FunctionCallbackInfo<Value>& args) {
+
+  // Get the default Isolate created at startup.
+  Isolate* iso = args.GetIsolate();
+
+  // Create a stack-allocated handle scope.
+  HandleScope handle_scope(iso);
+
+  Handle<Value> width = Number::New(iso, image->width());
+  args.GetReturnValue().Set(width);
+}
+
+static void GetHeightCallback(const FunctionCallbackInfo<Value>& args) {
+
+  // Get the default Isolate created at startup.
+  Isolate* iso = args.GetIsolate();
+
+  // Create a stack-allocated handle scope.
+  HandleScope handle_scope(iso);
+
+  Handle<Value> height = Number::New(iso, image->height());
+  args.GetReturnValue().Set(height);
+}
 
 QString getErrorMessage(Isolate* iso, TryCatch* tryCatch) {
   QString errorStr;
@@ -222,17 +245,16 @@ void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
   // Create a new context scope
   Context::Scope context_scope(context);
 
-  Handle<Value> args[4];
+  // put arguments into an array
+  Handle<Value> args[2];
   args[0] = Number::New(iso, x);
   args[1] = Number::New(iso, y);
-  args[2] = Number::New(iso, image->width());
-  args[3] = Number::New(iso, image->height());
 
   Local<Function> fun = Local<Function>::New(iso, function);
 
   TryCatch tryCatch;
 
-  Handle<Value> result = fun->Call(context->Global(), 4, args);
+  Handle<Value> result = fun->Call(context->Global(), 2, args);
 
   // catch runtime errors
   if(tryCatch.HasCaught()) {
@@ -265,6 +287,7 @@ void Brush::setImage(QImage* _image) {
   image = _image;
 }
 
+
 Brush::Brush(QObject* parent, QString source, QString name) : compileError(false), parent(parent) {
 
   // Get the default Isolate created at startup.
@@ -288,6 +311,8 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
   // utility functions
   global->Set(iso, "log", FunctionTemplate::New(iso, LogCallback));
   global->Set(iso, "getColorData", FunctionTemplate::New(iso, GetDataCallback));
+  global->Set(iso, "getCanvasWidth", FunctionTemplate::New(iso, GetWidthCallback));
+  global->Set(iso, "getCanvasHeight", FunctionTemplate::New(iso, GetHeightCallback));
 
   // Create a new context.
   Handle<Context> context = Context::New(iso, NULL, global);
