@@ -64,9 +64,9 @@ static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
     painter.setBrush(QBrush(color->IntegerValue()));
 
   painter.drawRect(QRect(
-                       QPoint(x1->IntegerValue(), y1->IntegerValue()),
-                       QPoint(x2->IntegerValue(), y2->IntegerValue()))
-  );
+        QPoint(x1->IntegerValue(), y1->IntegerValue()),
+        QPoint(x2->IntegerValue(), y2->IntegerValue()))
+      );
 }
 
 static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
@@ -89,10 +89,10 @@ static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
     painter.setBrush(QBrush(color->IntegerValue()));
 
   painter.drawEllipse(
-              QRect(
-                  QPoint(x1->IntegerValue(), y1->IntegerValue()),
-                  QPoint(x2->IntegerValue(), y2->IntegerValue()))
-  );
+      QRect(
+        QPoint(x1->IntegerValue(), y1->IntegerValue()),
+        QPoint(x2->IntegerValue(), y2->IntegerValue()))
+      );
 }
 
 static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
@@ -113,9 +113,11 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
   if(fill->BooleanValue())
     painter.setBrush(QBrush(color->IntegerValue()));
 
-  painter.drawEllipse(
-                  QPoint(x->IntegerValue(), y->IntegerValue()), r->IntegerValue(), r->IntegerValue()
-  );
+  painter.drawEllipse(QPoint(
+      x->IntegerValue(),
+      y->IntegerValue()),
+      r->IntegerValue(),
+      r->IntegerValue());
 }
 
 static void LogCallback(const FunctionCallbackInfo<Value>& args) {
@@ -131,14 +133,14 @@ static void LogCallback(const FunctionCallbackInfo<Value>& args) {
 static void GetDataCallback(const FunctionCallbackInfo<Value>& args) {
 
   // Get the default Isolate created at startup.
-  Isolate* isolate = args.GetIsolate();
+  Isolate* iso = args.GetIsolate();
 
   // Create a stack-allocated handle scope.
-  HandleScope handle_scope(isolate);
+  HandleScope handle_scope(iso);
 
   int width = image->width();
   int height = image->height();
-  Handle<Array> pixels = Array::New(isolate, width * height);
+  Handle<Array> pixels = Array::New(iso, width * height);
 
   // parse image data into js array
   // TODO improve this, maybe get all pixels at once from image
@@ -146,7 +148,7 @@ static void GetDataCallback(const FunctionCallbackInfo<Value>& args) {
     for (int h = 0; h < height; h++) {
       // this is like the worst thing you can do if you want a fast app
       int color = image->pixel(w, h);
-      pixels->Set(w * height + h, Integer::New(isolate, color));
+      pixels->Set(w * height + h, Integer::New(iso, color));
     }
   }
 
@@ -155,10 +157,10 @@ static void GetDataCallback(const FunctionCallbackInfo<Value>& args) {
 }
 
 
-QString getErrorMessage(Isolate* isolate, TryCatch* tryCatch) {
+QString getErrorMessage(Isolate* iso, TryCatch* tryCatch) {
   QString errorStr;
 
-  HandleScope handleScope(isolate);
+  HandleScope handleScope(iso);
   String::Utf8Value exception(tryCatch->Exception());
   Handle<Message> message = tryCatch->Message();
 
@@ -205,28 +207,28 @@ void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
 
   // if the script is not working or the function was not implemented
   if(compileError || function.IsEmpty()){
-      return;
+    return;
   }
 
   // Get the default Isolate created at startup.
-  Isolate* isolate = Isolate::GetCurrent();
+  Isolate* iso = Isolate::GetCurrent();
 
   // Create a stack-allocated handle scope.
-  HandleScope handle_scope(isolate);
+  HandleScope handle_scope(iso);
 
   // Create a new local context.
-  Local<Context> context = Local<Context>::New(isolate, _context);
+  Local<Context> context = Local<Context>::New(iso, _context);
 
   // Create a new context scope
   Context::Scope context_scope(context);
 
   Handle<Value> args[4];
-  args[0] = Number::New(isolate, x);
-  args[1] = Number::New(isolate, y);
-  args[2] = Number::New(isolate, image->width());
-  args[3] = Number::New(isolate, image->height());
+  args[0] = Number::New(iso, x);
+  args[1] = Number::New(iso, y);
+  args[2] = Number::New(iso, image->width());
+  args[3] = Number::New(iso, image->height());
 
-  Local<Function> fun = Local<Function>::New(isolate, function);
+  Local<Function> fun = Local<Function>::New(iso, function);
 
   TryCatch tryCatch;
 
@@ -235,14 +237,14 @@ void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
   // catch runtime errors
   if(tryCatch.HasCaught()) {
 
-      // somehow tryCatch.Exception() causes a seg fault...
+    // somehow tryCatch.Exception() causes a seg fault...
 
-      //String::Utf8Value exception(tryCatch.Exception());
+    //String::Utf8Value exception(tryCatch.Exception());
 
-      String::Utf8Value stackTrace(tryCatch.StackTrace());
+    String::Utf8Value stackTrace(tryCatch.StackTrace());
 
-      compileError = true;
-      ((MainWindow*) parent)->logError(*stackTrace);
+    compileError = true;
+    ((MainWindow*) parent)->logError(*stackTrace);
   }
 }
 
@@ -266,89 +268,77 @@ void Brush::setImage(QImage* _image) {
 Brush::Brush(QObject* parent, QString source, QString name) : compileError(false), parent(parent) {
 
   // Get the default Isolate created at startup.
-  Isolate* isolate = Isolate::GetCurrent();
+  Isolate* iso = Isolate::GetCurrent();
 
   // Create a stack-allocated handle scope.
-  HandleScope handle_scope(isolate);
+  HandleScope handle_scope(iso);
 
   // define new global object
   Handle<ObjectTemplate> global = ObjectTemplate::New();
 
-  //
   // define global functions
-  //
 
-  Local<FunctionTemplate> dpcFun = FunctionTemplate::New(isolate, DrawPointCallback);
-  global->Set(isolate, "point", dpcFun);
+  // drawing functions
+  global->Set(iso, "point", FunctionTemplate::New(iso, DrawPointCallback));
+  global->Set(iso, "line", FunctionTemplate::New(iso, DrawLineCallback));
+  global->Set(iso, "rect", FunctionTemplate::New(iso, DrawRectCallback));
+  global->Set(iso, "ellipse", FunctionTemplate::New(iso, DrawEllipseCallback));
+  global->Set(iso, "circle", FunctionTemplate::New(iso, DrawCircleCallback));
 
-  Local<FunctionTemplate> dlFun = FunctionTemplate::New(isolate, DrawLineCallback);
-  global->Set(isolate, "line", dlFun);
-
-  Local<FunctionTemplate> drFun = FunctionTemplate::New(isolate, DrawRectCallback);
-  global->Set(isolate, "rect", drFun);
-
-  Local<FunctionTemplate> elFun = FunctionTemplate::New(isolate, DrawEllipseCallback);
-  global->Set(isolate, "ellipse", elFun);
-
-  Local<FunctionTemplate> ciFun = FunctionTemplate::New(isolate, DrawCircleCallback);
-  global->Set(isolate, "circle", ciFun);
-
-  Local<FunctionTemplate> logFun = FunctionTemplate::New(isolate, LogCallback);
-  global->Set(isolate, "log", logFun);
-
-  Local<FunctionTemplate> getDataFun = FunctionTemplate::New(isolate, GetDataCallback);
-  global->Set(isolate, "getColorData", getDataFun);
+  // utility functions
+  global->Set(iso, "log", FunctionTemplate::New(iso, LogCallback));
+  global->Set(iso, "getColorData", FunctionTemplate::New(iso, GetDataCallback));
 
   // Create a new context.
-  Handle<Context> context = Context::New(isolate, NULL, global);
+  Handle<Context> context = Context::New(iso, NULL, global);
 
   // Persist context globally
-  _context.Reset(isolate, context);
+  _context.Reset(iso, context);
 
   // Enter the context for compiling and running the hello world script.
   Context::Scope context_scope(context);
 
   // Create a string containing the JavaScript source code.
-  Handle<String> sourceHandle = String::NewFromUtf8(isolate, source.toStdString().data());
+  Handle<String> sourceHandle = String::NewFromUtf8(iso, source.toStdString().data());
 
   // Compile the source code.
-  Handle<String> scriptFileName = String::NewFromUtf8(isolate, name.toStdString().data());
+  Handle<String> scriptFileName = String::NewFromUtf8(iso, name.toStdString().data());
   TryCatch tryCatch;
   Handle<Script> script = Script::Compile(sourceHandle, scriptFileName);
 
   if(script.IsEmpty()) {
 
-      // catch compilation errors
-      compileError = true;
-      ((MainWindow*) parent)->logError(getErrorMessage(isolate, &tryCatch));
-      return;
+    // catch compilation errors
+    compileError = true;
+    ((MainWindow*) parent)->logError(getErrorMessage(iso, &tryCatch));
+    return;
   }
 
   Handle<Value> result = script->Run();
   if(result.IsEmpty()) {
 
-      // catch runtime errors
-      compileError = true;
-      ((MainWindow*) parent)->logError(getErrorMessage(isolate, &tryCatch));
-      return;
+    // catch runtime errors
+    compileError = true;
+    ((MainWindow*) parent)->logError(getErrorMessage(iso, &tryCatch));
+    return;
   }
 
   // retrieve the handler functions from the global object
   Handle<Object> glob = context->Global();
-  Handle<Value> onClickVal = glob->Get(String::NewFromUtf8(isolate, "onClick"));
-  Handle<Value> onDragVal = glob->Get(String::NewFromUtf8(isolate, "onDrag"));
-  Handle<Value> onReleaseVal = glob->Get(String::NewFromUtf8(isolate, "onRelease"));
+  Handle<Value> onClickVal = glob->Get(String::NewFromUtf8(iso, "onClick"));
+  Handle<Value> onDragVal = glob->Get(String::NewFromUtf8(iso, "onDrag"));
+  Handle<Value> onReleaseVal = glob->Get(String::NewFromUtf8(iso, "onRelease"));
 
   // persist the functions globally
   if (onClickVal->IsFunction()) {
-    clickFun.Reset(isolate, Handle<Function>::Cast(onClickVal));
+    clickFun.Reset(iso, Handle<Function>::Cast(onClickVal));
   }
 
   if (onDragVal->IsFunction()) {
-    dragFun.Reset(isolate, Handle<Function>::Cast(onDragVal));
+    dragFun.Reset(iso, Handle<Function>::Cast(onDragVal));
   }
 
   if (onReleaseVal->IsFunction()) {
-    releaseFun.Reset(isolate, Handle<Function>::Cast(onReleaseVal));
+    releaseFun.Reset(iso, Handle<Function>::Cast(onReleaseVal));
   }
 }
