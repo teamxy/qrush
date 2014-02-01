@@ -39,3 +39,7 @@ rect(x1, y1, x2, y2, color, fill);
 circle(x, y, r, color, fill);
 ellipse(x1, y1, x2, y2, color, fill);
 ```
+
+`color` can be a Number like `0x00FF00`, an Array like `[0,255,0]` or an Object like `{r:0,g:255,b:0}`.
+
+`fill` is a Boolean that specifies whether you want the shape filled.
