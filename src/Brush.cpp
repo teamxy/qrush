@@ -1,5 +1,4 @@
 #include <iostream>
-#include <functional>
 
 #include <QApplication>
 
@@ -12,7 +11,40 @@ using namespace v8;
 // TODO improve this
 QImage* image;
 
-// TODO: implement lots of more QPainter mappings
+/**
+ * Turns a Javascript value of type Number, Object or Array
+ * into an int representing the numeric color value
+ * to be used by the painter.
+ *
+ * e.g.:
+ * 0xFF0010
+ * [255, 0, 16]
+ * { r : 255, g : 0, b : 16}
+ *
+ */
+static long ColorToInt(Value* value){
+  Isolate* iso = Isolate::GetCurrent();
+
+  if (value->IsNumber()) {
+    return Integer::Cast(value)->IntegerValue();
+  }
+
+  int r = 0, g = 0, b = 0;
+
+  if (value->IsArray()) {
+    Array* arr = Array::Cast(value);
+    r = Integer::Cast(*(arr->Get(0)))->IntegerValue();
+    g = Integer::Cast(*(arr->Get(1)))->IntegerValue();
+    b = Integer::Cast(*(arr->Get(2)))->IntegerValue();
+  }else if (value->IsObject()) {
+    Object* obj = Object::Cast(value);
+    r = Integer::Cast(*(obj->Get(String::NewFromUtf8(iso, "r"))))->IntegerValue();
+    g = Integer::Cast(*(obj->Get(String::NewFromUtf8(iso, "g"))))->IntegerValue();
+    b = Integer::Cast(*(obj->Get(String::NewFromUtf8(iso, "b"))))->IntegerValue();
+  }
+
+  return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+}
 
 // Draw a simple point
 static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
@@ -20,11 +52,11 @@ static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
   HandleScope scope(args.GetIsolate());
   Integer* x = Integer::Cast(*args[0]);
   Integer* y = Integer::Cast(*args[1]);
-  Integer* color = Integer::Cast(*args[2]);
+  int color = ColorToInt(*args[2]);
 
   QPainter painter(image);
 
-  painter.setPen(QColor(color->IntegerValue()));
+  painter.setPen(QColor(color));
   painter.drawPoint(x->Value(), y->Value());
 }
 
@@ -36,11 +68,11 @@ static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* x2 = Integer::Cast(*args[2]);
   Integer* y2 = Integer::Cast(*args[3]);
 
-  Integer* color = Integer::Cast(*args[4]);
+  int color = ColorToInt(*args[4]);
 
   QPainter painter(image);
 
-  painter.setPen(QColor(color->IntegerValue()));
+  painter.setPen(QColor(color));
   painter.drawLine(x1->IntegerValue(), y1->IntegerValue(), x2->IntegerValue(), y2->IntegerValue());
 }
 
@@ -52,16 +84,15 @@ static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* x2 = Integer::Cast(*args[2]);
   Integer* y2 = Integer::Cast(*args[3]);
 
-  Integer* color = Integer::Cast(*args[4]);
+  int color = ColorToInt(*args[4]);
 
   Value* fill = Boolean::Cast(*args[5]);
 
   QPainter painter(image);
 
-  painter.setPen(QColor(color->IntegerValue()));
+  painter.setPen(QColor(color));
 
-  if(fill->BooleanValue())
-    painter.setBrush(QBrush(color->IntegerValue()));
+  if(fill->BooleanValue()) painter.setBrush(QBrush(color));
 
   painter.drawRect(QRect(
         QPoint(x1->IntegerValue(), y1->IntegerValue()),
@@ -77,16 +108,16 @@ static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* x2 = Integer::Cast(*args[2]);
   Integer* y2 = Integer::Cast(*args[3]);
 
-  Integer* color = Integer::Cast(*args[4]);
+  int color = ColorToInt(*args[4]);
 
   Value* fill = Boolean::Cast(*args[5]);
 
   QPainter painter(image);
 
-  painter.setPen(QColor(color->IntegerValue()));
+  painter.setPen(QColor(color));
 
   if(fill->BooleanValue())
-    painter.setBrush(QBrush(color->IntegerValue()));
+    painter.setBrush(QBrush(color));
 
   painter.drawEllipse(
       QRect(
@@ -102,16 +133,16 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* y = Integer::Cast(*args[1]);
   Integer* r = Integer::Cast(*args[2]);
 
-  Integer* color = Integer::Cast(*args[3]);
+  int color = ColorToInt(*args[3]);
 
   Value* fill = Boolean::Cast(*args[4]);
 
   QPainter painter(image);
 
-  painter.setPen(QColor(color->IntegerValue()));
+  painter.setPen(QColor(color));
 
   if(fill->BooleanValue())
-    painter.setBrush(QBrush(color->IntegerValue()));
+    painter.setBrush(QBrush(color));
 
   painter.drawEllipse(QPoint(
       x->IntegerValue(),
