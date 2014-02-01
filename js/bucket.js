@@ -5,7 +5,7 @@ function onClick(x0,y0){
     for(var y=0; y < height; y++){
 	//point(x, y, 0xAFFF00);
 	//point(x,y, {g:32, b:200});
-	point(x,y, [100,35,0]);
+	point(x,y, [200,45,0]);
     }
   }
 }

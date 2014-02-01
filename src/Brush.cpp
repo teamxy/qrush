@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <QApplication>
+#include <QColor>
 
 #include "../include/Brush.h"
 #include "../include/MainWindow.h"
@@ -10,19 +11,22 @@ using namespace v8;
 // needs to be static for now :/
 // TODO improve this
 QImage* image;
+Persistent<Array> _imageDataArray;
+Persistent<Array> _imageDataObject;
+Persistent<Array> _imageDataNumber;
+
+static long RGBToInt(int r, int g, int b){
+  return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+}
 
 /**
  * Turns a Javascript value of type Number, Object or Array
  * into an int representing the numeric color value
  * to be used by the painter.
- *
  * e.g.:
- * 0xFF0010
- * [255, 0, 16]
- * { r : 255, g : 0, b : 16}
- *
+ * 0xFF0010, [255, 0, 16], {r:255,g:0,b:16}
  */
-static long ColorToInt(Value* value){
+static long ValToInt(Value* value){
   Isolate* iso = Isolate::GetCurrent();
 
   if (value->IsNumber()) {
@@ -43,7 +47,7 @@ static long ColorToInt(Value* value){
     b = Integer::Cast(*(obj->Get(String::NewFromUtf8(iso, "b"))))->IntegerValue();
   }
 
-  return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+  return RGBToInt(r,g,b);
 }
 
 // Draw a simple point
@@ -52,7 +56,7 @@ static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
   HandleScope scope(args.GetIsolate());
   Integer* x = Integer::Cast(*args[0]);
   Integer* y = Integer::Cast(*args[1]);
-  int color = ColorToInt(*args[2]);
+  int color = ValToInt(*args[2]);
 
   QPainter painter(image);
 
@@ -68,7 +72,7 @@ static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* x2 = Integer::Cast(*args[2]);
   Integer* y2 = Integer::Cast(*args[3]);
 
-  int color = ColorToInt(*args[4]);
+  int color = ValToInt(*args[4]);
 
   QPainter painter(image);
 
@@ -84,7 +88,7 @@ static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* x2 = Integer::Cast(*args[2]);
   Integer* y2 = Integer::Cast(*args[3]);
 
-  int color = ColorToInt(*args[4]);
+  int color = ValToInt(*args[4]);
 
   Value* fill = Boolean::Cast(*args[5]);
 
@@ -108,7 +112,7 @@ static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* x2 = Integer::Cast(*args[2]);
   Integer* y2 = Integer::Cast(*args[3]);
 
-  int color = ColorToInt(*args[4]);
+  int color = ValToInt(*args[4]);
 
   Value* fill = Boolean::Cast(*args[5]);
 
@@ -133,7 +137,7 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* y = Integer::Cast(*args[1]);
   Integer* r = Integer::Cast(*args[2]);
 
-  int color = ColorToInt(*args[3]);
+  int color = ValToInt(*args[3]);
 
   Value* fill = Boolean::Cast(*args[4]);
 
@@ -152,6 +156,7 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
 }
 
 static void LogCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 1) return;
   HandleScope scope(args.GetIsolate());
 
   String::Utf8Value msg(args[0]->ToString());
@@ -160,39 +165,147 @@ static void LogCallback(const FunctionCallbackInfo<Value>& args) {
   window->log(*msg);
 }
 
-// TODO make rgb values easier (wrap in object or array)
-static void GetDataCallback(const FunctionCallbackInfo<Value>& args) {
-
-  // Get the default Isolate created at startup.
-  Isolate* iso = args.GetIsolate();
-
-  // Create a stack-allocated handle scope.
+static void refreshImageNumbers(){
+  Isolate* iso = Isolate::GetCurrent();
   HandleScope handle_scope(iso);
 
+  // get image dimensions
   int width = image->width();
   int height = image->height();
+
+  // create a new pixel array
   Handle<Array> pixels = Array::New(iso, width * height);
 
+  // get pixel data
+  QRgb* pixel = (QRgb*) image->constBits();
+
   // parse image data into js array
-  // TODO improve this, maybe get all pixels at once from image
   for (int w = 0; w < width; w++) {
     for (int h = 0; h < height; h++) {
-      // this is like the worst thing you can do if you want a fast app
-      int color = image->pixel(w, h);
-      pixels->Set(w * height + h, Integer::New(iso, color));
+      // get color value
+      QRgb color = pixel[w * height + h];
+      int red = qRed(color);
+      int green = qGreen(color);
+      int blue = qBlue(color);
+
+      pixels->Set(w * height + h, Integer::New(iso, RGBToInt(red,green,blue)));
     }
   }
 
-  // return the pixel values
-  args.GetReturnValue().Set(pixels);
+  _imageDataNumber.Reset(iso, pixels);
+}
+
+static void refreshImageArrays(){
+  Isolate* iso = Isolate::GetCurrent();
+  HandleScope handle_scope(iso);
+
+  // get image dimensions
+  int width = image->width();
+  int height = image->height();
+
+  // create a new pixel array
+  Handle<Array> pixels = Array::New(iso, width * height);
+
+  // get pixel data
+  QRgb* pixel = (QRgb*) image->constBits();
+
+  // parse image data into js array
+  for (int w = 0; w < width; w++) {
+    for (int h = 0; h < height; h++) {
+      // get color value
+      QRgb color = pixel[w * height + h];
+      int red = qRed(color);
+      int green = qGreen(color);
+      int blue = qBlue(color);
+
+      // create new rgb array
+      Handle<Array> arr = Array::New(iso);
+      arr->Set(0, Integer::New(iso, red));
+      arr->Set(1, Integer::New(iso, green));
+      arr->Set(2, Integer::New(iso, blue));
+
+      // put in array
+      pixels->Set(w * height + h, arr);
+    }
+  }
+
+  _imageDataArray.Reset(iso, pixels);
+}
+
+static void refreshImageObjects(){
+  Isolate* iso = Isolate::GetCurrent();
+  HandleScope handle_scope(iso);
+
+  // get image dimensions
+  int width = image->width();
+  int height = image->height();
+
+  // create a new pixel array
+  Handle<Array> pixels = Array::New(iso, width * height);
+
+  // get pixel data
+  QRgb* pixel = (QRgb*) image->constBits();
+
+  // create strings once and not in the loop
+  Handle<String> r = String::NewFromUtf8(iso, "r");
+  Handle<String> g = String::NewFromUtf8(iso, "g");
+  Handle<String> b = String::NewFromUtf8(iso, "b");
+
+  // parse image data into js array
+  for (int w = 0; w < width; w++) {
+    for (int h = 0; h < height; h++) {
+      // get color value
+      QRgb color = pixel[w * height + h];
+      int red = qRed(color);
+      int green = qGreen(color);
+      int blue = qBlue(color);
+
+      // create new rgb object
+      Handle<Object> obj = Object::New(iso);
+      obj->Set(r, Integer::New(iso, red));
+      obj->Set(g, Integer::New(iso, green));
+      obj->Set(b, Integer::New(iso, blue));
+
+      // put in array
+      pixels->Set(w * height + h, obj);
+    }
+  }
+
+  _imageDataObject.Reset(iso, pixels);
+}
+
+static void GetDataCallback(const FunctionCallbackInfo<Value>& args) {
+  // v8 boilerplate
+  Isolate* iso = args.GetIsolate();
+  HandleScope handle_scope(iso);
+
+  // does the user want fresh data?
+  bool refresh = Boolean::Cast(*args[0])->BooleanValue();
+
+  std::string type = *String::Utf8Value(args[1]);
+
+  if(type == "array"){
+    if(refresh){ refreshImageArrays(); }
+    // return the pixel values
+    args.GetReturnValue().Set(_imageDataArray);
+    return;
+  }
+
+  if(type == "object"){
+    if(refresh){ refreshImageObjects(); }
+    // return the pixel values
+    args.GetReturnValue().Set(_imageDataObject);
+    return;
+  }
+
+  if(refresh){ refreshImageNumbers(); }
+  args.GetReturnValue().Set(_imageDataNumber);
+  return;
+
 }
 
 static void GetWidthCallback(const FunctionCallbackInfo<Value>& args) {
-
-  // Get the default Isolate created at startup.
   Isolate* iso = args.GetIsolate();
-
-  // Create a stack-allocated handle scope.
   HandleScope handle_scope(iso);
 
   Handle<Value> width = Number::New(iso, image->width());
@@ -200,11 +313,7 @@ static void GetWidthCallback(const FunctionCallbackInfo<Value>& args) {
 }
 
 static void GetHeightCallback(const FunctionCallbackInfo<Value>& args) {
-
-  // Get the default Isolate created at startup.
   Isolate* iso = args.GetIsolate();
-
-  // Create a stack-allocated handle scope.
   HandleScope handle_scope(iso);
 
   Handle<Value> height = Number::New(iso, image->height());
@@ -235,7 +344,6 @@ QString getErrorMessage(Isolate* iso, TryCatch* tryCatch) {
     errorStr.append("\n");
 
     // fill padding with empty chars to point to the error pos with ^
-
     int start = message->GetStartColumn();
     for (int i = 0; i < start; i++) {
       errorStr.append(" ");
@@ -264,16 +372,10 @@ void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
     return;
   }
 
-  // Get the default Isolate created at startup.
+  // setup isolate and context
   Isolate* iso = Isolate::GetCurrent();
-
-  // Create a stack-allocated handle scope.
   HandleScope handle_scope(iso);
-
-  // Create a new local context.
   Local<Context> context = Local<Context>::New(iso, _context);
-
-  // Create a new context scope
   Context::Scope context_scope(context);
 
   // put arguments into an array
@@ -281,16 +383,18 @@ void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
   args[0] = Number::New(iso, x);
   args[1] = Number::New(iso, y);
 
+  // convert to local function
   Local<Function> fun = Local<Function>::New(iso, function);
 
   TryCatch tryCatch;
 
+  // call function
   Handle<Value> result = fun->Call(context->Global(), 2, args);
 
   // catch runtime errors
   if(tryCatch.HasCaught()) {
 
-    // somehow tryCatch.Exception() causes a seg fault...
+    // TODO somehow tryCatch.Exception() causes a seg fault...
 
     //String::Utf8Value exception(tryCatch.Exception());
 
@@ -313,11 +417,19 @@ void Brush::onRelease(int x, int y){
   runV8Callback(x, y, releaseFun);
 }
 
-// TODO: make this static?
 void Brush::setImage(QImage* _image) {
-  image = _image;
-}
+  // setup isolate and context
+  // this is necessary even though we don't use them!
+  Isolate* iso = Isolate::GetCurrent();
+  HandleScope handle_scope(iso);
+  Local<Context> context = Local<Context>::New(iso, _context);
+  Context::Scope context_scope(context);
 
+  image = _image;
+  refreshImageNumbers();
+  refreshImageObjects();
+  refreshImageArrays();
+}
 
 Brush::Brush(QObject* parent, QString source, QString name) : compileError(false), parent(parent) {
 
