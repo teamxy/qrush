@@ -25,10 +25,21 @@ function onRelease(x, y){
 
 ```javascript
 log(msg); // logs the specified message
-getColorData(); // gets an array containing the color values for all visible pixels of the canvas
+getColorData([refresh], [type]); // gets an array containing the color values for all visible pixels of the canvas
 getCanvasWidth(); // get the current width of the canvas
 getCanvasHeight(); // get the current height of the canvas
 ```
+
+### getColorData
+
+`getColorData` returns an Array containing containing the color values for all visible pixels of the canvas.
+
+The function has two optional parameters:
+
+* `refresh` is a Boolean that specifies whether Qrush should fill the array with the latest color values. If set to *false*, you will receive the array that was created when `getColorData` was last called with *true*. **Setting the parameter to *true* can notably slow down your application, depending on the `type` of data you expect and how often the function is called.** Defaults to *false*.
+
+* `type` can be `"number"`, `"array"`, or `"object"` and specifies the type of content in the array that is returned to you. Defaults to `"number"`. Be aware that `"array"` and `"object"` are currently much slower than `"number"`, especially if `refresh` is set to *true*.
+
 
 ## Drawing functions
 
