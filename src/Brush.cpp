@@ -11,12 +11,14 @@ using namespace v8;
 // needs to be static for now :/
 // TODO improve this
 QImage* image;
+QImage* previewImage;
+QImage* currentImage;
 Persistent<Array> _imageDataArray;
 Persistent<Array> _imageDataObject;
 Persistent<Array> _imageDataNumber;
 
-static long RGBToInt(int r, int g, int b){
-  return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+static int RGBAToInt(int a, int r, int g, int b){
+  return ((a) << 24) + ((r) << 16) + ((g) << 8) + (b);
 }
 
 /**
@@ -24,30 +26,33 @@ static long RGBToInt(int r, int g, int b){
  * into an int representing the numeric color value
  * to be used by the painter.
  * e.g.:
- * 0xFF0010, [255, 0, 16], {r:255,g:0,b:16}
+ * 0xFF0010FF, [255, 0, 16, 255], {r:255,g:0,b:16, a:128}
  */
-static long ValToInt(Value* value){
+static QColor valueToQColor(Value* value){
   Isolate* iso = Isolate::GetCurrent();
 
   if (value->IsNumber()) {
-    return Integer::Cast(value)->IntegerValue();
+    int iColor = Integer::Cast(value)->Int32Value();
+    return QColor(qRed(iColor), qGreen(iColor), qBlue(iColor), qAlpha(iColor));
   }
 
-  int r = 0, g = 0, b = 0;
+  int r = 0, g = 0, b = 0, a = 0;
 
   if (value->IsArray()) {
     Array* arr = Array::Cast(value);
     r = Integer::Cast(*(arr->Get(0)))->IntegerValue();
     g = Integer::Cast(*(arr->Get(1)))->IntegerValue();
     b = Integer::Cast(*(arr->Get(2)))->IntegerValue();
+    a = Integer::Cast(*(arr->Get(3)))->IntegerValue();
   }else if (value->IsObject()) {
     Object* obj = Object::Cast(value);
     r = Integer::Cast(*(obj->Get(String::NewFromUtf8(iso, "r"))))->IntegerValue();
     g = Integer::Cast(*(obj->Get(String::NewFromUtf8(iso, "g"))))->IntegerValue();
     b = Integer::Cast(*(obj->Get(String::NewFromUtf8(iso, "b"))))->IntegerValue();
+    a = Integer::Cast(*(obj->Get(String::NewFromUtf8(iso, "a"))))->IntegerValue();
   }
 
-  return RGBToInt(r,g,b);
+  return QColor(r,g,b,a);
 }
 
 // Draw a simple point
@@ -56,11 +61,12 @@ static void DrawPointCallback(const FunctionCallbackInfo<Value>& args) {
   HandleScope scope(args.GetIsolate());
   Integer* x = Integer::Cast(*args[0]);
   Integer* y = Integer::Cast(*args[1]);
-  int color = ValToInt(*args[2]);
 
-  QPainter painter(image);
+  QColor color = valueToQColor(*args[2]);
 
-  painter.setPen(QColor(color));
+  QPainter painter(currentImage);
+
+  painter.setPen(color);
   painter.drawPoint(x->Value(), y->Value());
 }
 
@@ -72,11 +78,11 @@ static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* x2 = Integer::Cast(*args[2]);
   Integer* y2 = Integer::Cast(*args[3]);
 
-  int color = ValToInt(*args[4]);
+  QColor color = valueToQColor(*args[4]);
 
-  QPainter painter(image);
+  QPainter painter(currentImage);
 
-  painter.setPen(QColor(color));
+  painter.setPen(color);
   painter.drawLine(x1->IntegerValue(), y1->IntegerValue(), x2->IntegerValue(), y2->IntegerValue());
 }
 
@@ -88,13 +94,13 @@ static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* x2 = Integer::Cast(*args[2]);
   Integer* y2 = Integer::Cast(*args[3]);
 
-  int color = ValToInt(*args[4]);
+  QColor color = valueToQColor(*args[4]);
 
   Value* fill = Boolean::Cast(*args[5]);
 
-  QPainter painter(image);
+  QPainter painter(currentImage);
 
-  painter.setPen(QColor(color));
+  painter.setPen(color);
 
   if(fill->BooleanValue()) painter.setBrush(QBrush(color));
 
@@ -112,13 +118,13 @@ static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* x2 = Integer::Cast(*args[2]);
   Integer* y2 = Integer::Cast(*args[3]);
 
-  int color = ValToInt(*args[4]);
+  QColor color = valueToQColor(*args[4]);
 
   Value* fill = Boolean::Cast(*args[5]);
 
-  QPainter painter(image);
+  QPainter painter(currentImage);
 
-  painter.setPen(QColor(color));
+  painter.setPen(color);
 
   if(fill->BooleanValue())
     painter.setBrush(QBrush(color));
@@ -137,13 +143,13 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
   Integer* y = Integer::Cast(*args[1]);
   Integer* r = Integer::Cast(*args[2]);
 
-  int color = ValToInt(*args[3]);
+  QColor color = valueToQColor(*args[3]);
 
   Value* fill = Boolean::Cast(*args[4]);
 
-  QPainter painter(image);
+  QPainter painter(currentImage);
 
-  painter.setPen(QColor(color));
+  painter.setPen(color);
 
   if(fill->BooleanValue())
     painter.setBrush(QBrush(color));
@@ -165,6 +171,32 @@ static void LogCallback(const FunctionCallbackInfo<Value>& args) {
   window->log(*msg);
 }
 
+static void FillCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 1) return;
+  HandleScope scope(args.GetIsolate());
+
+  Integer* value = Integer::Cast(*args[0]);
+
+  currentImage->fill(value->Int32Value());
+}
+
+static void SetPreviewCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 1) return;
+  HandleScope scope(args.GetIsolate());
+
+  Value* active = Boolean::Cast(*args[0]);
+
+  MainWindow* window = (MainWindow*) QApplication::activeWindow();
+  window->log(QString("Preview active: ").append(active->BooleanValue() ? "true" : "false"));
+
+  if(active->BooleanValue())
+      currentImage = previewImage;
+  else {
+      currentImage = image;
+      previewImage->fill(0);
+  }
+}
+
 static void refreshImageNumbers(){
   Isolate* iso = Isolate::GetCurrent();
   HandleScope handle_scope(iso);
@@ -184,11 +216,12 @@ static void refreshImageNumbers(){
     for (int h = 0; h < height; h++) {
       // get color value
       QRgb color = pixel[w * height + h];
+      int alpha = qAlpha(color);
       int red = qRed(color);
       int green = qGreen(color);
       int blue = qBlue(color);
 
-      pixels->Set(w * height + h, Integer::New(iso, RGBToInt(red,green,blue)));
+      pixels->Set(w * height + h, Integer::New(iso, RGBAToInt(red, green, blue, alpha)));
     }
   }
 
@@ -417,7 +450,7 @@ void Brush::onRelease(int x, int y){
   runV8Callback(x, y, releaseFun);
 }
 
-void Brush::setImage(QImage* _image) {
+void Brush::setImage(QImage* _image, QImage* _previewImage) {
   // setup isolate and context
   // this is necessary even though we don't use them!
   Isolate* iso = Isolate::GetCurrent();
@@ -426,6 +459,8 @@ void Brush::setImage(QImage* _image) {
   Context::Scope context_scope(context);
 
   image = _image;
+  previewImage = _previewImage;
+  currentImage = _image;
   refreshImageNumbers();
   refreshImageObjects();
   refreshImageArrays();
@@ -456,6 +491,8 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
   global->Set(iso, "getColorData", FunctionTemplate::New(iso, GetDataCallback));
   global->Set(iso, "getCanvasWidth", FunctionTemplate::New(iso, GetWidthCallback));
   global->Set(iso, "getCanvasHeight", FunctionTemplate::New(iso, GetHeightCallback));
+  global->Set(iso, "setPreview", FunctionTemplate::New(iso, SetPreviewCallback));
+  global->Set(iso, "fill", FunctionTemplate::New(iso, FillCallback));
 
   // Create a new context.
   Handle<Context> context = Context::New(iso, NULL, global);

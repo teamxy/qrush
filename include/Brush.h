@@ -12,7 +12,7 @@ class Brush {
     void onDrag(int x, int y);
     void onClick(int x, int y);
     void onRelease(int x, int y);
-    void setImage(QImage* _image);
+    void setImage(QImage* _image, QImage* _previewImage);
 
   private:
     v8::Persistent<v8::Function> clickFun;

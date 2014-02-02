@@ -26,6 +26,7 @@ class GLWidget : public QGLWidget {
     bool isPressed;
     QPoint lastPoint;
     QImage image;
+    QImage preview;
     std::shared_ptr<Brush> brush;
 
 };
