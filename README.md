@@ -51,6 +51,7 @@ circle(x, y, r, color, fill);
 ellipse(x1, y1, x2, y2, color, fill);
 ```
 
-`color` can be a Number like `0x00FF00`, an Array like `[0,255,0]` or an Object like `{r:0,g:255,b:0}`.
+`color` can be a Number like `0x00FF00FF`, an Array like `[0,255,0, 128]` or an Object like `{r:0,g:255,b:0, a:255}`.
+Notice that you have to specify an alpha otherwise your alpha value will be set to 0 by default.
 
 `fill` is a Boolean that specifies whether you want the shape filled.
