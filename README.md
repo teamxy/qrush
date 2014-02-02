@@ -52,6 +52,19 @@ ellipse(x1, y1, x2, y2, color, fill);
 ```
 
 `color` can be a Number like `0x00FF00FF`, an Array like `[0,255,0, 128]` or an Object like `{r:0,g:255,b:0, a:255}`.
-Notice that you have to specify an alpha otherwise your alpha value will be set to 0 by default.
+
+**Notice that you have to specify an alpha otherwise your alpha value will be set to 0 by default.**
 
 `fill` is a Boolean that specifies whether you want the shape filled.
+
+## The preview layer
+
+You can use a preview layer in Qrush! to draw on the canvas before the actual shape is drawn on the canvas to give the user information about how the final shape will look like.
+
+The following example clears the preview layer, draws a rectangle and turns off the preview layer:
+```javascript
+setPreview(true);
+fill(0);
+rect(0, 0, 100, 100, 0xff0000ff);
+setPreview(false);
+```
