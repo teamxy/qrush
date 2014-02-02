@@ -175,9 +175,9 @@ static void FillCallback(const FunctionCallbackInfo<Value>& args) {
   if (args.Length() < 1) return;
   HandleScope scope(args.GetIsolate());
 
-  Integer* value = Integer::Cast(*args[0]);
+  QColor color = valueToQColor(*args[0]);
 
-  currentImage->fill(value->Int32Value());
+  currentImage->fill(color);
 }
 
 static void SetPreviewCallback(const FunctionCallbackInfo<Value>& args) {
