@@ -100,9 +100,12 @@ static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
 
   QPainter painter(currentImage);
 
-  painter.setPen(color);
+  painter.setPen(QColor(0,0,0,0));
 
-  if(fill->BooleanValue()) painter.setBrush(QBrush(color));
+  if(fill->BooleanValue())
+      painter.setBrush(QBrush(color));
+  else
+      painter.setPen(color);
 
   painter.drawRect(QRect(
         QPoint(x1->IntegerValue(), y1->IntegerValue()),
