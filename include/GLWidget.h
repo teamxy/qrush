@@ -2,7 +2,6 @@
 #define QRUSH_GLWIDGET_H_
 
 #include <QGLWidget>
-#include <string>
 #include "Brush.h"
 
 class GLWidget : public QGLWidget {

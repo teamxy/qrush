@@ -127,10 +127,12 @@ static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
 
   QPainter painter(currentImage);
 
-  painter.setPen(color);
+  painter.setPen(QColor(0,0,0,0));
 
   if(fill->BooleanValue())
     painter.setBrush(QBrush(color));
+  else
+    painter.setPen(color);
 
   painter.drawEllipse(
       QRect(
@@ -436,7 +438,7 @@ void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
     //String::Utf8Value stackTrace(tryCatch.StackTrace());
 
     compileError = true;
-    ((MainWindow*) parent)->logError(getErrorMessage(iso, &tryCatch));
+    ((MainWindow*) window)->logError(getErrorMessage(iso, &tryCatch));
   }
 }
 
@@ -468,7 +470,7 @@ void Brush::setImage(QImage* _image, QImage* _previewImage) {
   refreshImageArrays();
 }
 
-Brush::Brush(QObject* parent, QString source, QString name) : compileError(false), parent(parent) {
+Brush::Brush(QString source, QString name) : compileError(false), window(QApplication::activeWindow()) {
 
   // Get the default Isolate created at startup.
   Isolate* iso = Isolate::GetCurrent();
@@ -517,7 +519,7 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
     // catch compilation errors
     compileError = true;
-    ((MainWindow*) parent)->logError(getErrorMessage(iso, &tryCatch));
+    ((MainWindow*) window)->logError(getErrorMessage(iso, &tryCatch));
     return;
   }
 
@@ -526,7 +528,7 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
 
     // catch runtime errors
     compileError = true;
-    ((MainWindow*) parent)->logError(getErrorMessage(iso, &tryCatch));
+    ((MainWindow*) window)->logError(getErrorMessage(iso, &tryCatch));
     return;
   }
 
@@ -548,4 +550,5 @@ Brush::Brush(QObject* parent, QString source, QString name) : compileError(false
   if (onReleaseVal->IsFunction()) {
     releaseFun.Reset(iso, Handle<Function>::Cast(onReleaseVal));
   }
+
 }

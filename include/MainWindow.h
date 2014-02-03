@@ -2,10 +2,10 @@
 #define QRUSH_MAINWINDOW_H_
 
 #include <QMainWindow>
-#include "GLWidget.h"
-#include <unordered_map>
 
+#include "GLWidget.h"
 #include "Highlighter.h"
+#include "Brush.h"
 
 namespace Ui {
   class MainWindow;
@@ -26,6 +26,10 @@ class MainWindow : public QMainWindow
     void saveButtonClicked();
     void addNewBrush();
     void brushChanged(QString brushName);
+    void fileLoaded(QString filename, QString content);
+
+  signals:
+    void signalFileLoaded(QString filename, QString content);
 
   private:
     Ui::MainWindow *ui;

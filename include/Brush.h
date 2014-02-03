@@ -4,11 +4,10 @@
 #include <QImage>
 #include <QPainter>
 #include <v8.h>
-#include <string>
 
 class Brush {
   public:
-    Brush(QObject* parent, QString script, QString name = "unnamed.js");
+    Brush(QString script, QString name = "unnamed.js");
     void onDrag(int x, int y);
     void onClick(int x, int y);
     void onRelease(int x, int y);
@@ -21,7 +20,7 @@ class Brush {
     v8::Persistent<v8::Context> _context;
     bool compileError;
     void runV8Callback(int x, int y, v8::Persistent<v8::Function>& function);
-    QObject* parent;
+    QWidget* window;
 };
 
 #endif /* end of include guard */

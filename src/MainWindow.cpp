@@ -6,6 +6,8 @@
 #include <QInputDialog>
 #include <QFile>
 #include <QDir>
+#include <QFuture>
+#include <QtConcurrent>
 
 #include <iostream>
 
@@ -43,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   connect(ui->saveButton, SIGNAL(clicked()), this, SLOT(saveButtonClicked()));
   connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addNewBrush()));
   connect(ui->comboBox, SIGNAL(currentTextChanged(QString)), SLOT(brushChanged(QString)));
+  connect(this, SIGNAL(signalFileLoaded(QString,QString)), this, SLOT(fileLoaded(QString,QString)));
 
   // load all js files in the current working directory
 
@@ -94,7 +97,7 @@ void MainWindow::saveButtonClicked() {
 
   log(ui->comboBox->currentText() + " saved");
 
-  std::shared_ptr<Brush> brush(new Brush(this, source));
+  std::shared_ptr<Brush> brush(new Brush(source));
   canvas->setBrush(brush);
 }
 
@@ -120,19 +123,29 @@ void MainWindow::addNewBrush() {
   }
 }
 
-void MainWindow::brushChanged(QString brushName) {
+void MainWindow::fileLoaded(QString filename, QString content) {
 
-    ui->jsTextEdit->setEnabled(true);
-
-    QFile file(SCRIPT_PATH + brushName);
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-    QString source = file.readAll();
-    file.close();
-
-    ui->jsTextEdit->setText(source);
-
-    std::shared_ptr<Brush> brush(new Brush(this, source));
+    std::shared_ptr<Brush> brush(new Brush(content));
     canvas->setBrush(brush);
 
-    log(brushName + " loaded");
+    ui->jsTextEdit->setText(content);
+    ui->jsTextEdit->setEnabled(true);
+
+    log(filename + " loaded");
+
+}
+
+void MainWindow::brushChanged(QString brushName) {
+
+    ui->jsTextEdit->setEnabled(false);
+
+    QtConcurrent::run([brushName, this](){
+        QFile file(SCRIPT_PATH + brushName);
+        file.open(QIODevice::ReadOnly | QIODevice::Text);
+        QString source = file.readAll();
+        file.close();
+
+        emit signalFileLoaded(brushName, source);
+    });
+
 }
