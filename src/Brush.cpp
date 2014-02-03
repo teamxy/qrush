@@ -152,10 +152,12 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
 
   QPainter painter(currentImage);
 
-  painter.setPen(color);
+  painter.setPen(QColor(0,0,0,0));
 
   if(fill->BooleanValue())
     painter.setBrush(QBrush(color));
+  else
+    painter.setPen(color);
 
   painter.drawEllipse(QPoint(
       x->IntegerValue(),
