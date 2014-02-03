@@ -189,9 +189,6 @@ static void SetPreviewCallback(const FunctionCallbackInfo<Value>& args) {
 
   Value* active = Boolean::Cast(*args[0]);
 
-  MainWindow* window = (MainWindow*) QApplication::activeWindow();
-  window->log(QString("Preview active: ").append(active->BooleanValue() ? "true" : "false"));
-
   if(active->BooleanValue())
       currentImage = previewImage;
   else {
