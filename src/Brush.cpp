@@ -434,10 +434,10 @@ void Brush::runV8Callback(int x, int y, Persistent<Function>& function){
 
     //String::Utf8Value exception(tryCatch.Exception());
 
-    String::Utf8Value stackTrace(tryCatch.StackTrace());
+    //String::Utf8Value stackTrace(tryCatch.StackTrace());
 
     compileError = true;
-    ((MainWindow*) parent)->logError(*stackTrace);
+    ((MainWindow*) parent)->logError(getErrorMessage(iso, &tryCatch));
   }
 }
 
