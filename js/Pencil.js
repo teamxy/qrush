@@ -1,3 +1,4 @@
+var color = 0xff000000;
 var x0, y0;
 
 var onClick = function (x, y) {
@@ -6,7 +7,7 @@ var onClick = function (x, y) {
 }
 
 var onDrag = function (x, y) {
-	line(x0, y0, x, y, 0xff000000);
+	line(x0, y0, x, y, color);
 	x0 = x;
 	y0 = y;
 }
