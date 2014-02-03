@@ -18,7 +18,6 @@ var onDrag = function (x, y) {
 }
 
 var onRelease = function (x, y) {
-
 	setPreview(false);
 	circle(cX, cY, r, color, true);
 
