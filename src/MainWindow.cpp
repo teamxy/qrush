@@ -28,10 +28,18 @@ if(x0 && y0){\n\
   y0 = y;\n\
 }";
 
-const static QString SCRIPT_PATH = "js/";
+static QString JS_PATH = "js/";
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
+
+  // init the .qrush directory
+
+  JS_PATH = QDir::homePath() + "/.qrush/qrush-brush";
+  QDir jsDir;
+  jsDir.mkpath(JS_PATH);
+
+  // init ui
 
   ui->jsConsoleTextEdit->setText("");
 
@@ -49,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   // load all js files in the current working directory
 
-  QDir dir(SCRIPT_PATH);
+  QDir dir(JS_PATH);
   dir.setFilter(QDir::Files);
 
   QStringList list = dir.entryList();
@@ -64,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   }
 
   log("Ready :)");
+  log("Your scripts path is: " + JS_PATH);
 }
 
 MainWindow::~MainWindow() {
@@ -90,7 +99,7 @@ void MainWindow::logError(const QString &message) {
 void MainWindow::saveButtonClicked() {
   QString source = ui->jsTextEdit->toPlainText();
 
-  QFile file(SCRIPT_PATH + ui->comboBox->currentText());
+  QFile file(JS_PATH + "/" + ui->comboBox->currentText());
   file.open(QIODevice::WriteOnly | QIODevice::Text);
   file.write(source.toStdString().data());
   file.close();
@@ -125,7 +134,10 @@ void MainWindow::addNewBrush() {
 
 void MainWindow::fileLoaded(QString filename, QString content) {
 
+    // somehow we can not create a new Brush object in a thread
+
     std::shared_ptr<Brush> brush(new Brush(content));
+
     canvas->setBrush(brush);
 
     ui->jsTextEdit->setText(content);
@@ -139,13 +151,15 @@ void MainWindow::brushChanged(QString brushName) {
 
     ui->jsTextEdit->setEnabled(false);
 
-    QtConcurrent::run([brushName, this](){
-        QFile file(SCRIPT_PATH + brushName);
+    QtConcurrent::run(
+      [brushName, this] () {
+        QFile file(JS_PATH + "/" + brushName);
         file.open(QIODevice::ReadOnly | QIODevice::Text);
         QString source = file.readAll();
         file.close();
 
         emit signalFileLoaded(brushName, source);
-    });
+      }
+    );
 
 }
