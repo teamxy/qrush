@@ -287,15 +287,13 @@ static void refreshImageArrays(){
     for (int h = 0; h < height; h++) {
       // get color value
       QRgb color = pixel[w * height + h];
-      int red = qRed(color);
-      int green = qGreen(color);
-      int blue = qBlue(color);
 
       // create new rgb array
       Handle<Array> arr = Array::New(iso);
-      arr->Set(0, Integer::New(iso, red));
-      arr->Set(1, Integer::New(iso, green));
-      arr->Set(2, Integer::New(iso, blue));
+      arr->Set(0, Integer::New(iso, qRed(color)));
+      arr->Set(1, Integer::New(iso, qGreen(color)));
+      arr->Set(2, Integer::New(iso, qBlue(color)));
+      arr->Set(3, Integer::New(iso, qAlpha(color)));
 
       // put in array
       pixels->Set(w * height + h, arr);
@@ -323,21 +321,20 @@ static void refreshImageObjects(){
   Handle<String> r = String::NewFromUtf8(iso, "r");
   Handle<String> g = String::NewFromUtf8(iso, "g");
   Handle<String> b = String::NewFromUtf8(iso, "b");
+  Handle<String> a = String::NewFromUtf8(iso, "a");
 
   // parse image data into js array
   for (int w = 0; w < width; w++) {
     for (int h = 0; h < height; h++) {
       // get color value
       QRgb color = pixel[w * height + h];
-      int red = qRed(color);
-      int green = qGreen(color);
-      int blue = qBlue(color);
 
       // create new rgb object
       Handle<Object> obj = Object::New(iso);
-      obj->Set(r, Integer::New(iso, red));
-      obj->Set(g, Integer::New(iso, green));
-      obj->Set(b, Integer::New(iso, blue));
+      obj->Set(r, Integer::New(iso, qRed(color)));
+      obj->Set(g, Integer::New(iso, qGreen(color)));
+      obj->Set(b, Integer::New(iso, qBlue(color)));
+      obj->Set(a, Integer::New(iso, qAlpha(color)));
 
       // put in array
       pixels->Set(w * height + h, obj);
