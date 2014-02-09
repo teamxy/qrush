@@ -53,3 +53,6 @@ INCLUDEPATH += $$v8/include -I
 
 LIBS += $$v8/out/native/{libv8_{base.x64,snapshot},libicu{uc,i18n,data}}.a
 LIBS += -stdlib=libc++ -mmacosx-version-min=10.7
+
+RESOURCES += \
+    icons.qrc

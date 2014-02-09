@@ -16,6 +16,8 @@ GLWidget::GLWidget(QWidget *parent)
 
     preview.fill(QColor(0,0,0,0));
     image.fill(0);
+
+    history_undo.push_back(image.copy());
 }
 
 void GLWidget::paintEvent(QPaintEvent *event) {
@@ -68,6 +70,16 @@ void GLWidget::setBrush(std::shared_ptr<Brush> brush){
 void GLWidget::mousePressEvent(QMouseEvent *event) {
   if(!brush){ return; }
   isPressed = true;
+
+  // generate history image
+
+  history_undo.push_back(image.copy());
+
+  if(history_undo.size() > maxHistoryLength)
+      history_undo.pop_front();
+
+
+
   brush->onClick(event->x(), event->y());
   update();
 }
@@ -77,5 +89,46 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
   if(!brush){ return; }
   isPressed = false;
   brush->onRelease(event->x(), event->y());
+  update();
+}
+
+void GLWidget::undo() {
+
+  std::cout << "uSize=" << history_undo.size() << ", rSize=" << history_redo.size() << std::endl;
+
+  if(history_undo.size() == 0)
+      return;
+
+
+  QImage tmpImage = history_undo.back();
+  history_undo.pop_back();
+
+  history_redo.push_back(image.copy());
+
+  if(history_redo.size() > maxHistoryLength)
+      history_redo.pop_front();
+
+  image = tmpImage;
+  update();
+
+}
+
+void GLWidget::redo() {
+
+  std::cout << "uSize=" << history_undo.size() << ", rSize=" << history_redo.size() << std::endl;
+
+  if(history_redo.size() == 0)
+      return;
+
+
+  QImage tmpImage = history_redo.back();
+  history_redo.pop_back();
+
+  history_undo.push_back(image.copy());
+
+  if(history_undo.size() > maxHistoryLength)
+      history_undo.pop_front();
+
+  image = tmpImage;
   update();
 }

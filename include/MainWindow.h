@@ -27,6 +27,8 @@ class MainWindow : public QMainWindow
     void addNewBrush();
     void brushChanged(QString brushName);
     void fileLoaded(QString filename, QString content);
+    void undo();
+    void redo();
 
   signals:
     void signalFileLoaded(QString filename, QString content);

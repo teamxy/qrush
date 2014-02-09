@@ -2,6 +2,7 @@
 #define QRUSH_GLWIDGET_H_
 
 #include <QGLWidget>
+#include <deque>
 #include "Brush.h"
 
 class GLWidget : public QGLWidget {
@@ -14,6 +15,8 @@ class GLWidget : public QGLWidget {
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void setBrush(std::shared_ptr<Brush> brush);
+    void undo();
+    void redo();
 
   protected:
     void paintEvent(QPaintEvent *event);
@@ -28,6 +31,10 @@ class GLWidget : public QGLWidget {
     QImage preview;
     std::shared_ptr<Brush> brush;
 
+    std::deque<QImage> history_undo;
+    std::deque<QImage> history_redo;
+
+    const int maxHistoryLength = 10;
 };
 
 #endif // QRUSH_GLWIDGET_H_
