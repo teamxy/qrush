@@ -16,14 +16,14 @@ const static QString BOILERPLATE_JS =
 "var x0, y0;\n\
 \n\
 function onRelease(x,y){\n\
-  x0 = undefined;\n\
-  y0 = undefined;\n\
+    x0 = undefined;\n\
+    y0 = undefined;\n\
 }\n\
 \n\
 function onDrag(x,y){\n\
-if(x0 && y0){\n\
-  line(x0,y0,x, y, 0x00FF00);\n\
-}\n\
+  if(x0 && y0){\n\
+    line(x0,y0,x, y, 0x00FF00);\n\
+  }\n\
   x0 = x;\n\
   y0 = y;\n\
 }";
@@ -67,12 +67,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   QStringList list = dir.entryList();
 
   for(int i = 0; i < list.size(); ++i) {
-      QString name = list.at(i);
+    QString name = list.at(i);
 
-      if(!name.endsWith(".js"))
-          continue;
+    if(!name.endsWith(".js"))
+      continue;
 
-      ui->comboBox->addItem(name);
+    ui->comboBox->addItem(name);
   }
 
   log("Ready :)");
@@ -91,13 +91,13 @@ void MainWindow::log(const QString &message) {
 }
 
 void MainWindow::logError(const QString &message) {
-    QString formattedMessage;
+  QString formattedMessage;
 
-    formattedMessage.append("<font color='red' style='white-space: pre'>");
-    formattedMessage.append(message);
-    formattedMessage.append("</font>");
+  formattedMessage.append("<font color='red' style='white-space: pre'>");
+  formattedMessage.append(message);
+  formattedMessage.append("</font>");
 
-    log(formattedMessage);
+  log(formattedMessage);
 }
 
 void MainWindow::saveButtonClicked() {
@@ -115,8 +115,6 @@ void MainWindow::saveButtonClicked() {
 }
 
 void MainWindow::addNewBrush() {
-  log("new Brush");
-
   // make a new input dialog
   bool ok;
   QString brushName = QInputDialog::getText(this, tr("New Brush"), tr("Brush name:"), QLineEdit::Normal, "", &ok);
@@ -125,11 +123,11 @@ void MainWindow::addNewBrush() {
   if(!brushName.endsWith(".js")) brushName.append(".js");
 
   if (ok && !brushName.isEmpty()) {
-    log("New brush "+brushName);
+    log("New brush " + brushName);
 
     // add to combobox
-    ui->comboBox->addItem(brushName);
     ui->comboBox->setCurrentText(brushName);
+    ui->comboBox->addItem(brushName);
 
     // add some boilerplate code
     ui->jsTextEdit->setText(BOILERPLATE_JS);
@@ -138,34 +136,33 @@ void MainWindow::addNewBrush() {
 
 void MainWindow::fileLoaded(QString filename, QString content) {
 
-    // somehow we can not create a new Brush object in a thread
+  // somehow we can not create a new Brush object in a thread
 
-    std::shared_ptr<Brush> brush(new Brush(content));
+  std::shared_ptr<Brush> brush(new Brush(content));
 
-    canvas->setBrush(brush);
+  canvas->setBrush(brush);
 
-    ui->jsTextEdit->setText(content);
-    ui->jsTextEdit->setEnabled(true);
+  ui->jsTextEdit->setText(content);
+  ui->jsTextEdit->setEnabled(true);
 
-    log(filename + " loaded");
+  log(filename + " loaded");
 
 }
 
 void MainWindow::brushChanged(QString brushName) {
 
-    ui->jsTextEdit->setEnabled(false);
+  ui->jsTextEdit->setEnabled(false);
 
-    QtConcurrent::run(
+  QtConcurrent::run(
       [brushName, this] () {
-        QFile file(JS_PATH + "/" + brushName);
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        QString source = file.readAll();
-        file.close();
+      QFile file(JS_PATH + "/" + brushName);
+      file.open(QIODevice::ReadOnly | QIODevice::Text);
+      QString source = file.readAll();
+      file.close();
 
-        emit signalFileLoaded(brushName, source);
+      emit signalFileLoaded(brushName, source);
       }
-    );
-
+      );
 }
 
 void MainWindow::undo() {

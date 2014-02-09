@@ -17,7 +17,7 @@ Persistent<Array> _imageDataArray;
 Persistent<Array> _imageDataObject;
 Persistent<Array> _imageDataNumber;
 
-static int RGBAToInt(int a, int r, int g, int b){
+static inline int RGBAToInt(int a, int r, int g, int b){
   return ((a) << 24) + ((r) << 16) + ((g) << 8) + (b);
 }
 
@@ -168,6 +168,42 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
       r->IntegerValue());
 }
 
+static void DrawImageCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 5) return;
+  HandleScope scope(args.GetIsolate());
+  Integer* x = Integer::Cast(*args[0]);
+  Integer* y = Integer::Cast(*args[1]);
+  Integer* w = Integer::Cast(*args[2]);
+  Integer* h = Integer::Cast(*args[3]);
+  String::Utf8Value filename(args[4]->ToString());
+
+  QImage img((QString(*filename)));
+
+  QRect pos = QRect(x->Value(), y->Value(), w->Value(), h->Value());
+
+  QPainter painter(currentImage);
+  painter.drawImage(pos, img);
+}
+
+static void DrawTextCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 6) return;
+  HandleScope scope(args.GetIsolate());
+  Integer* x = Integer::Cast(*args[0]);
+  Integer* y = Integer::Cast(*args[1]);
+  Integer* fontsize = Integer::Cast(*args[2]);
+  String::Utf8Value text(args[3]->ToString());
+  String::Utf8Value fontname(args[4]->ToString());
+  QColor color = valueToQColor(*args[5]);
+
+  QFont font((QString(*fontname)));
+  font.setPixelSize(fontsize->Value());
+
+  QPainter painter(currentImage);
+  painter.setFont(font);
+  painter.setPen(color);
+  painter.drawText(x->Value(), y->Value(), QString(*text));
+}
+
 static void LogCallback(const FunctionCallbackInfo<Value>& args) {
   if (args.Length() < 1) return;
   HandleScope scope(args.GetIsolate());
@@ -194,10 +230,10 @@ static void SetPreviewCallback(const FunctionCallbackInfo<Value>& args) {
   Value* active = Boolean::Cast(*args[0]);
 
   if(active->BooleanValue())
-      currentImage = previewImage;
+    currentImage = previewImage;
   else {
-      currentImage = image;
-      previewImage->fill(0);
+    currentImage = image;
+    previewImage->fill(0);
   }
 }
 
@@ -251,15 +287,13 @@ static void refreshImageArrays(){
     for (int h = 0; h < height; h++) {
       // get color value
       QRgb color = pixel[w * height + h];
-      int red = qRed(color);
-      int green = qGreen(color);
-      int blue = qBlue(color);
 
       // create new rgb array
       Handle<Array> arr = Array::New(iso);
-      arr->Set(0, Integer::New(iso, red));
-      arr->Set(1, Integer::New(iso, green));
-      arr->Set(2, Integer::New(iso, blue));
+      arr->Set(0, Integer::New(iso, qRed(color)));
+      arr->Set(1, Integer::New(iso, qGreen(color)));
+      arr->Set(2, Integer::New(iso, qBlue(color)));
+      arr->Set(3, Integer::New(iso, qAlpha(color)));
 
       // put in array
       pixels->Set(w * height + h, arr);
@@ -287,21 +321,20 @@ static void refreshImageObjects(){
   Handle<String> r = String::NewFromUtf8(iso, "r");
   Handle<String> g = String::NewFromUtf8(iso, "g");
   Handle<String> b = String::NewFromUtf8(iso, "b");
+  Handle<String> a = String::NewFromUtf8(iso, "a");
 
   // parse image data into js array
   for (int w = 0; w < width; w++) {
     for (int h = 0; h < height; h++) {
       // get color value
       QRgb color = pixel[w * height + h];
-      int red = qRed(color);
-      int green = qGreen(color);
-      int blue = qBlue(color);
 
       // create new rgb object
       Handle<Object> obj = Object::New(iso);
-      obj->Set(r, Integer::New(iso, red));
-      obj->Set(g, Integer::New(iso, green));
-      obj->Set(b, Integer::New(iso, blue));
+      obj->Set(r, Integer::New(iso, qRed(color)));
+      obj->Set(g, Integer::New(iso, qGreen(color)));
+      obj->Set(b, Integer::New(iso, qBlue(color)));
+      obj->Set(a, Integer::New(iso, qAlpha(color)));
 
       // put in array
       pixels->Set(w * height + h, obj);
@@ -489,6 +522,8 @@ Brush::Brush(QString source, QString name) : compileError(false), window(QApplic
   global->Set(iso, "rect", FunctionTemplate::New(iso, DrawRectCallback));
   global->Set(iso, "ellipse", FunctionTemplate::New(iso, DrawEllipseCallback));
   global->Set(iso, "circle", FunctionTemplate::New(iso, DrawCircleCallback));
+  global->Set(iso, "image", FunctionTemplate::New(iso, DrawImageCallback));
+  global->Set(iso, "text", FunctionTemplate::New(iso, DrawTextCallback));
 
   // utility functions
   global->Set(iso, "log", FunctionTemplate::New(iso, LogCallback));
