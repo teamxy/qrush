@@ -164,8 +164,6 @@ void MainWindow::brushChanged(QString brushName) {
         else {
             source = BOILERPLATE_JS;
         }
-
-        log(source);
         emit signalFileLoaded(brushName, source);
       }
       );
