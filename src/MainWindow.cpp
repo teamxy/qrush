@@ -22,7 +22,7 @@ function onRelease(x,y){\n\
 \n\
 function onDrag(x,y){\n\
   if(x0 && y0){\n\
-    line(x0,y0,x, y, 0x00FF00);\n\
+    line(x0,y0,x, y, 0xFF00FF00);\n\
   }\n\
   x0 = x;\n\
   y0 = y;\n\
@@ -122,8 +122,8 @@ void MainWindow::addNewBrush() {
     log("New brush " + brushName);
 
     // add to combobox
-    ui->comboBox->setCurrentText(brushName);
     ui->comboBox->addItem(brushName);
+    ui->comboBox->setCurrentText(brushName);
 
     // add some boilerplate code
     ui->jsTextEdit->setText(BOILERPLATE_JS);
