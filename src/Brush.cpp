@@ -171,18 +171,37 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
 static void DrawImageCallback(const FunctionCallbackInfo<Value>& args) {
   if (args.Length() < 5) return;
   HandleScope scope(args.GetIsolate());
-  Integer* x1 = Integer::Cast(*args[0]);
-  Integer* x2 = Integer::Cast(*args[1]);
-  Integer* x3 = Integer::Cast(*args[2]);
-  Integer* x4 = Integer::Cast(*args[3]);
+  Integer* x = Integer::Cast(*args[0]);
+  Integer* y = Integer::Cast(*args[1]);
+  Integer* w = Integer::Cast(*args[2]);
+  Integer* h = Integer::Cast(*args[3]);
   String::Utf8Value filename(args[4]->ToString());
 
   QImage img((QString(*filename)));
 
-  QRect pos = QRect(x1->Value(), x2->Value(), x3->Value(), x4->Value());
+  QRect pos = QRect(x->Value(), y->Value(), w->Value(), h->Value());
 
   QPainter painter(currentImage);
   painter.drawImage(pos, img);
+}
+
+static void DrawTextCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 6) return;
+  HandleScope scope(args.GetIsolate());
+  Integer* x = Integer::Cast(*args[0]);
+  Integer* y = Integer::Cast(*args[1]);
+  Integer* fontsize = Integer::Cast(*args[2]);
+  String::Utf8Value text(args[3]->ToString());
+  String::Utf8Value fontname(args[4]->ToString());
+  QColor color = valueToQColor(*args[5]);
+
+  QFont font((QString(*fontname)));
+  font.setPixelSize(fontsize->Value());
+
+  QPainter painter(currentImage);
+  painter.setFont(font);
+  painter.setPen(color);
+  painter.drawText(x->Value(), y->Value(), QString(*text));
 }
 
 static void LogCallback(const FunctionCallbackInfo<Value>& args) {
@@ -211,10 +230,10 @@ static void SetPreviewCallback(const FunctionCallbackInfo<Value>& args) {
   Value* active = Boolean::Cast(*args[0]);
 
   if(active->BooleanValue())
-      currentImage = previewImage;
+    currentImage = previewImage;
   else {
-      currentImage = image;
-      previewImage->fill(0);
+    currentImage = image;
+    previewImage->fill(0);
   }
 }
 
@@ -507,6 +526,7 @@ Brush::Brush(QString source, QString name) : compileError(false), window(QApplic
   global->Set(iso, "ellipse", FunctionTemplate::New(iso, DrawEllipseCallback));
   global->Set(iso, "circle", FunctionTemplate::New(iso, DrawCircleCallback));
   global->Set(iso, "image", FunctionTemplate::New(iso, DrawImageCallback));
+  global->Set(iso, "text", FunctionTemplate::New(iso, DrawTextCallback));
 
   // utility functions
   global->Set(iso, "log", FunctionTemplate::New(iso, LogCallback));
