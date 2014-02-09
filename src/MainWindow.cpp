@@ -128,9 +128,6 @@ void MainWindow::addNewBrush() {
     // add to combobox
     ui->comboBox->addItem(brushName);
     ui->comboBox->setCurrentText(brushName);
-
-    // add some boilerplate code
-    ui->jsTextEdit->setText(BOILERPLATE_JS);
   }
 }
 
