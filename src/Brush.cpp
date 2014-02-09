@@ -17,7 +17,7 @@ Persistent<Array> _imageDataArray;
 Persistent<Array> _imageDataObject;
 Persistent<Array> _imageDataNumber;
 
-static int RGBAToInt(int a, int r, int g, int b){
+static inline int RGBAToInt(int a, int r, int g, int b){
   return ((a) << 24) + ((r) << 16) + ((g) << 8) + (b);
 }
 
@@ -166,6 +166,23 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
       y->IntegerValue()),
       r->IntegerValue(),
       r->IntegerValue());
+}
+
+static void DrawImageCallback(const FunctionCallbackInfo<Value>& args) {
+  if (args.Length() < 5) return;
+  HandleScope scope(args.GetIsolate());
+  Integer* x1 = Integer::Cast(*args[0]);
+  Integer* x2 = Integer::Cast(*args[1]);
+  Integer* x3 = Integer::Cast(*args[2]);
+  Integer* x4 = Integer::Cast(*args[3]);
+  String::Utf8Value filename(args[4]->ToString());
+
+  QImage img((QString(*filename)));
+
+  QRect pos = QRect(x1->Value(), x2->Value(), x3->Value(), x4->Value());
+
+  QPainter painter(currentImage);
+  painter.drawImage(pos, img);
 }
 
 static void LogCallback(const FunctionCallbackInfo<Value>& args) {
@@ -489,6 +506,7 @@ Brush::Brush(QString source, QString name) : compileError(false), window(QApplic
   global->Set(iso, "rect", FunctionTemplate::New(iso, DrawRectCallback));
   global->Set(iso, "ellipse", FunctionTemplate::New(iso, DrawEllipseCallback));
   global->Set(iso, "circle", FunctionTemplate::New(iso, DrawCircleCallback));
+  global->Set(iso, "image", FunctionTemplate::New(iso, DrawImageCallback));
 
   // utility functions
   global->Set(iso, "log", FunctionTemplate::New(iso, LogCallback));
