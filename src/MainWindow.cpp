@@ -44,7 +44,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   ui->jsConsoleTextEdit->setText("");
 
   canvas = new GLWidget(this);
-  setCentralWidget(canvas);
+  ui->horizontalLayout_2->addWidget(canvas);
+  //setCentralWidget(canvas);
+
 
   highlighter = new Highlighter(ui->jsTextEdit->document());
 
@@ -54,6 +56,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addNewBrush()));
   connect(ui->comboBox, SIGNAL(currentTextChanged(QString)), SLOT(brushChanged(QString)));
   connect(this, SIGNAL(signalFileLoaded(QString,QString)), this, SLOT(fileLoaded(QString,QString)));
+  connect(ui->actionUndo, SIGNAL(triggered()), this, SLOT(undo()));
+  connect(ui->actionRedo, SIGNAL(triggered()), this, SLOT(redo()));
 
   // load all js files in the current working directory
 
@@ -159,4 +163,14 @@ void MainWindow::brushChanged(QString brushName) {
       emit signalFileLoaded(brushName, source);
       }
       );
+}
+
+void MainWindow::undo() {
+  log("undo");
+  canvas->undo();
+}
+
+void MainWindow::redo() {
+  log("redo");
+  canvas->redo();
 }
