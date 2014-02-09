@@ -94,8 +94,6 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
 
 void GLWidget::undo() {
 
-  std::cout << "uSize=" << history_undo.size() << ", rSize=" << history_redo.size() << std::endl;
-
   if(history_undo.size() == 0)
       return;
 
@@ -114,8 +112,6 @@ void GLWidget::undo() {
 }
 
 void GLWidget::redo() {
-
-  std::cout << "uSize=" << history_undo.size() << ", rSize=" << history_redo.size() << std::endl;
 
   if(history_redo.size() == 0)
       return;
