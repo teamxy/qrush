@@ -155,12 +155,19 @@ void MainWindow::brushChanged(QString brushName) {
 
   QtConcurrent::run(
       [brushName, this] () {
-      QFile file(JS_PATH + "/" + brushName);
-      file.open(QIODevice::ReadOnly | QIODevice::Text);
-      QString source = file.readAll();
-      file.close();
+        QFile file(JS_PATH + "/" + brushName);
+        QString source;
 
-      emit signalFileLoaded(brushName, source);
+        if(file.isOpen()) {
+            file.open(QIODevice::ReadOnly | QIODevice::Text);
+            source = file.readAll();
+            file.close();
+        }
+        else {
+            source = BOILERPLATE_JS;
+        }
+
+        emit signalFileLoaded(brushName, source);
       }
       );
 }
