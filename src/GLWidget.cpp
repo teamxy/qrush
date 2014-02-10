@@ -2,6 +2,7 @@
 #include <QTimer>
 #include <iostream>
 #include <QMouseEvent>
+#include <QOpenGLFunctions>
 
 GLWidget::GLWidget(QWidget *parent)
   : QGLWidget(QGLFormat(QGL::SampleBuffers), parent) {
@@ -10,6 +11,12 @@ GLWidget::GLWidget(QWidget *parent)
     setAttribute(Qt::WA_StaticContents);
 
     setCursor(QCursor(Qt::CrossCursor));
+
+    makeCurrent();
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_LINE_SMOOTH);
+
+    setFormat(QGLFormat(QGL::SampleBuffers));
 
     image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
     preview.convertToFormat(QImage::Format_ARGB32_Premultiplied);
