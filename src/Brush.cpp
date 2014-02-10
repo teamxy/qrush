@@ -82,6 +82,8 @@ static void DrawLineCallback(const FunctionCallbackInfo<Value>& args) {
 
   QPainter painter(currentImage);
 
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHint(QPainter::HighQualityAntialiasing);
   painter.setPen(color);
   painter.drawLine(x1->IntegerValue(), y1->IntegerValue(), x2->IntegerValue(), y2->IntegerValue());
 }
@@ -100,6 +102,8 @@ static void DrawRectCallback(const FunctionCallbackInfo<Value>& args) {
 
   QPainter painter(currentImage);
 
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHint(QPainter::HighQualityAntialiasing);
   painter.setPen(QColor(0,0,0,0));
 
   if(fill->BooleanValue())
@@ -134,6 +138,9 @@ static void DrawEllipseCallback(const FunctionCallbackInfo<Value>& args) {
   else
     painter.setPen(color);
 
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHint(QPainter::HighQualityAntialiasing);
+
   painter.drawEllipse(
       QRect(
         QPoint(x1->IntegerValue(), y1->IntegerValue()),
@@ -161,6 +168,9 @@ static void DrawCircleCallback(const FunctionCallbackInfo<Value>& args) {
   else
     painter.setPen(color);
 
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHint(QPainter::HighQualityAntialiasing);
+
   painter.drawEllipse(QPoint(
       x->IntegerValue(),
       y->IntegerValue()),
@@ -182,6 +192,10 @@ static void DrawImageCallback(const FunctionCallbackInfo<Value>& args) {
   QRect pos = QRect(x->Value(), y->Value(), w->Value(), h->Value());
 
   QPainter painter(currentImage);
+
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHint(QPainter::HighQualityAntialiasing);
+
   painter.drawImage(pos, img);
 }
 
@@ -201,6 +215,9 @@ static void DrawTextCallback(const FunctionCallbackInfo<Value>& args) {
   QPainter painter(currentImage);
   painter.setFont(font);
   painter.setPen(color);
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHint(QPainter::HighQualityAntialiasing);
+
   painter.drawText(x->Value(), y->Value(), QString(*text));
 }
 
