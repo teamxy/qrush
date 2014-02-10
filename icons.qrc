@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>res/redo.png</file>
         <file>res/undo.png</file>
+        <file>res/save.png</file>
     </qresource>
 </RCC>

@@ -17,6 +17,7 @@ class GLWidget : public QGLWidget {
     void setBrush(std::shared_ptr<Brush> brush);
     void undo();
     void redo();
+    void save(QString filename);
 
   protected:
     void paintEvent(QPaintEvent *event);

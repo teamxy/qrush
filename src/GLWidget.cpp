@@ -128,3 +128,8 @@ void GLWidget::redo() {
   image = tmpImage;
   update();
 }
+
+void GLWidget::save(QString filename){
+  std::cout << "saving to " << std::endl;
+ image.save(filename);
+}

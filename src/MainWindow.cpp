@@ -4,6 +4,7 @@
 #include "../include/Brush.h"
 #include <QTime>
 #include <QInputDialog>
+#include <QFileDialog>
 #include <QFile>
 #include <QDir>
 #include <QFuture>
@@ -58,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   connect(this, SIGNAL(signalFileLoaded(QString,QString)), this, SLOT(fileLoaded(QString,QString)));
   connect(ui->actionUndo, SIGNAL(triggered()), this, SLOT(undo()));
   connect(ui->actionRedo, SIGNAL(triggered()), this, SLOT(redo()));
+  connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
 
   // load all js files in the current working directory
 
@@ -177,4 +179,12 @@ void MainWindow::undo() {
 void MainWindow::redo() {
   log("redo");
   canvas->redo();
+}
+
+void MainWindow::save() {
+  QString filename = QFileDialog::getSaveFileName(this, tr("Save File"), "",
+                           tr("Images (*.png *.xpm *.jpg)"));
+  if (!filename.isEmpty()) {
+    canvas->save(filename);
+  }
 }

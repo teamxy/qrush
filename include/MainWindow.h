@@ -29,6 +29,7 @@ class MainWindow : public QMainWindow
     void fileLoaded(QString filename, QString content);
     void undo();
     void redo();
+    void save();
 
   signals:
     void signalFileLoaded(QString filename, QString content);
