@@ -130,6 +130,5 @@ void GLWidget::redo() {
 }
 
 void GLWidget::save(QString filename){
-  std::cout << "saving to " << std::endl;
  image.save(filename);
 }
