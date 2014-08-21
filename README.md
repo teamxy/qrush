@@ -3,6 +3,8 @@ qrush
 
 Qrush!
 
+![User Interface](http://shi-314.github.io/img/qrush-ui.jpg)
+
 ## Handler Functions
 
 Declare these functions in your script. They will be automatically called when the corresponding event is triggered.
